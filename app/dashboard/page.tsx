@@ -16,6 +16,22 @@ export default function DashboardPage() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(20);
 
+    const getFormattedDate = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}${m}${d}`;
+    };
+    
+    // Default: 30 days ago to today
+    const defaultEnd = new Date();
+    const defaultStart = new Date();
+    defaultStart.setDate(defaultEnd.getDate() - 30);
+    
+    const [startDate, setStartDate] = useState(getFormattedDate(defaultStart));
+    const [endDate, setEndDate] = useState(getFormattedDate(defaultEnd));
+
+
     // States for row editing
     const [editingId, setEditingId] = useState<string | null>(null);
     const [tempEditData, setTempEditData] = useState<any>(null);
@@ -24,14 +40,16 @@ export default function DashboardPage() {
         router.push("/login");
     };
 
-    const fetchReports = async (pageNum = 1, limitNum = 20, query = "") => {
+    const fetchReports = async (pageNum = 1, limitNum = 20, query = "", start = startDate, end = endDate) => {
         setIsLoading(true);
         setError(null);
         try {
             const result = await reportService.getPaybankReports({
                 page: pageNum,
                 limit: limitNum,
-                search: query
+                search: query,
+                start_date: start,
+                end_date: end
             });
             setDashboardData(result.data || []);
         } catch (err: any) {
@@ -47,11 +65,11 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
-            fetchReports(page, limit, search);
+            fetchReports(page, limit, search, startDate, endDate);
         }, 500);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [page, limit, search]);
+    }, [page, limit, search, startDate, endDate]);
 
     const navLinks = [
         { name: "Dashboard", href: "/dashboard", active: true, icon: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" },
