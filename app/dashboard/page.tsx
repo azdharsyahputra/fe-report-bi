@@ -29,12 +29,12 @@ export default function DashboardPage() {
         const d = String(date.getDate()).padStart(2, "0");
         return `${y}-${m}-${d}`;
     };
-    
+
     // Default: 30 days ago to today
     const defaultEnd = new Date();
     const defaultStart = new Date();
     defaultStart.setDate(defaultEnd.getDate() - 30);
-    
+
     const [startDate, setStartDate] = useState(getFormattedDate(defaultStart));
     const [endDate, setEndDate] = useState(getFormattedDate(defaultEnd));
     const [inputStartDate, setInputStartDate] = useState(getHtmlDate(defaultStart));
@@ -394,14 +394,14 @@ export default function DashboardPage() {
                         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1640 }}>
                             <thead>
                                 <tr>
-                                    <th colSpan={4} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", borderRight: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Data Pengirim</th>
+                                    <th colSpan={3} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", borderRight: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Data Pengirim</th>
                                     <th colSpan={4} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", borderRight: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Data Penerima</th>
                                     <th colSpan={3} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", borderRight: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Transaksi</th>
                                     <th colSpan={1} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Pengaturan</th>
                                 </tr>
                                 <tr>
                                     {/* Pengirim */}
-                                    {["Nama", "No. HP", "Prefix", "Kota"].map(h => (
+                                    {["Nama", "Prefix", "Kota"].map(h => (
                                         <th key={'sender-' + h} style={{
                                             padding: "14px 10px", fontSize: 12, fontWeight: 600,
                                             color: "#334155", borderBottom: "1px solid #e2e8f0", textAlign: "left"
@@ -434,7 +434,7 @@ export default function DashboardPage() {
                             <tbody>
                                 {isLoading ? (
                                     <tr>
-                                        <td colSpan={12} style={{ padding: "60px", textAlign: "center" }}>
+                                        <td colSpan={11} style={{ padding: "60px", textAlign: "center" }}>
                                             <div className="spinner" style={{ margin: "0 auto", width: 32, height: 32 }} />
                                             <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>Memuat data laporan...</p>
                                         </td>
@@ -453,12 +453,7 @@ export default function DashboardPage() {
                                                 <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a" }}>
                                                     <CellContent isEditing={isEditing} value={currentData.pengirim} onChange={(v: string) => handleTempChange('pengirim', v)} bold />
                                                 </td>
-                                                <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b" }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <span style={{ paddingLeft: isEditing ? 0 : 8, color: '#64748b' }}>+</span>
-                                                        <CellContent isEditing={isEditing} value={currentData.no_hp} onChange={(v: string) => handleTempChange('no_hp', v)} monospaced />
-                                                    </div>
-                                                </td>
+
                                                 <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
                                                     <CellContent isEditing={isEditing} value={currentData.prefix_pengirim} onChange={(v: string) => handleTempChange('prefix_pengirim', v)} blue />
                                                 </td>
@@ -552,7 +547,7 @@ export default function DashboardPage() {
                                     })
                                 ) : (
                                     <tr>
-                                        <td colSpan={12} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
+                                        <td colSpan={11} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
                                             Tidak ada data transaksi.
                                         </td>
                                     </tr>

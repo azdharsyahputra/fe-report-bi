@@ -1,13 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { kycService } from "@/lib/services/kyc";
 
 export default function KYCPage() {
     const router = useRouter();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [search, setSearch] = useState("");
-    const [filterProvinsi, setFilterProvinsi] = useState("Semua");
+    const [kycData, setKycData] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(20);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
@@ -28,38 +33,40 @@ export default function KYCPage() {
         { name: "Pengaturan", href: "#", active: false, icon: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" },
     ];
 
-    const kycData = [
-        {
-            id: "KYC-001", nama: "Budi Santoso", kota: "Jakarta Selatan", provinsi: "DKI Jakarta", status: "Verified", color: "#10b981", bg: "rgba(16,185,129,0.12)",
-            ktp: "https://images.unsplash.com/photo-1628157588553-5eeea00af15c?q=80&w=100&auto=format&fit=crop",
-            selfie: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=100&auto=format&fit=crop"
-        },
-        {
-            id: "KYC-002", nama: "Siti Aminah", kota: "Bandung", provinsi: "Jawa Barat", status: "Pending", color: "#f59e0b", bg: "rgba(245,158,11,0.12)",
-            ktp: "https://images.unsplash.com/photo-1628157588553-5eeea00af15c?q=80&w=100&auto=format&fit=crop",
-            selfie: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=100&auto=format&fit=crop"
-        },
-        {
-            id: "KYC-003", nama: "Ahmad Dahlan", kota: "Surabaya", provinsi: "Jawa Timur", status: "Rejected", color: "#ef4444", bg: "rgba(239,68,68,0.12)",
-            ktp: "https://images.unsplash.com/photo-1628157588553-5eeea00af15c?q=80&w=100&auto=format&fit=crop",
-            selfie: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&auto=format&fit=crop"
-        },
-        {
-            id: "KYC-004", nama: "Rina Wati", kota: "Medan", provinsi: "Sumatera Utara", status: "Verified", color: "#10b981", bg: "rgba(16,185,129,0.12)",
-            ktp: "https://images.unsplash.com/photo-1628157588553-5eeea00af15c?q=80&w=100&auto=format&fit=crop",
-            selfie: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=100&auto=format&fit=crop"
-        },
-        {
-            id: "KYC-005", nama: "Andi Saputra", kota: "Semarang", provinsi: "Jawa Tengah", status: "Pending", color: "#f59e0b", bg: "rgba(245,158,11,0.12)",
-            ktp: "https://images.unsplash.com/photo-1628157588553-5eeea00af15c?q=80&w=100&auto=format&fit=crop",
-            selfie: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100&auto=format&fit=crop"
-        },
-    ];
+    const fetchKycData = async (pageNum = 1, limitNum = 20, query = "") => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const result = await kycService.getKycData({
+                page: pageNum,
+                limit: limitNum,
+                search: query,
+            });
+            setKycData(result.data || []);
+        } catch (err: any) {
+            if (err.status === 401) {
+                router.push("/login");
+                return;
+            }
+            setError(err.message || "Gagal memuat data KYC.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-    const filteredData = kycData.filter(d =>
-        (filterProvinsi === "Semua" || d.provinsi === filterProvinsi) &&
-        (d.nama.toLowerCase().includes(search.toLowerCase()) || d.kota.toLowerCase().includes(search.toLowerCase()))
-    );
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            fetchKycData(page, limit, search);
+        }, 500);
+        return () => clearTimeout(delayDebounceFn);
+    }, [page, limit, search]);
+
+    const getImageUrl = (fileName: string) => {
+        if (!fileName) return "";
+        // Convert Windows path to a URL-friendly path served by backend
+        const cleanName = fileName.replace(/\\/g, "/").split("/").pop() || "";
+        return `http://localhost:8080/kyc/images/${cleanName}`;
+    };
 
     return (
         <div style={{
@@ -202,42 +209,6 @@ export default function KYCPage() {
                             <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>Verifikasi data nasabah (Know Your Customer)</p>
                         </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                        {/* Notification */}
-                        <button style={{
-                            position: "relative", background: "rgba(15, 23, 42, 0.6)",
-                            border: "1px solid rgba(37, 99, 235, 0.12)",
-                            borderRadius: 10, padding: 8, cursor: "pointer", color: "#64748b",
-                            transition: "all 0.2s ease",
-                        }} id="notification-button">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                            </svg>
-                            <span style={{
-                                position: "absolute", top: -4, right: -4,
-                                width: 18, height: 18, borderRadius: "50%",
-                                background: "#2563eb", color: "#0f172a",
-                                fontSize: 10, fontWeight: 700,
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>3</span>
-                        </button>
-
-                        {/* User */}
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{
-                                width: 36, height: 36, borderRadius: "50%",
-                                background: "linear-gradient(135deg, #2563eb, #3b82f6)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                color: "#0f172a", fontWeight: 700, fontSize: 13,
-                                boxShadow: "0 2px 10px rgba(37, 99, 235, 0.3)",
-                            }}>AD</div>
-                            <div className="max-md:!hidden">
-                                <p style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", margin: 0 }}>Admin</p>
-                                <p style={{ fontSize: 11, color: "#64748b", margin: 0 }}>admin@bi.go.id</p>
-                            </div>
-                        </div>
-                    </div>
                 </header>
 
                 {/* Main Content */}
@@ -246,7 +217,7 @@ export default function KYCPage() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, gap: 16, flexWrap: "wrap" }}>
                         <div>
                             <p style={{ fontSize: 14, color: "#0f172a", margin: 0, fontWeight: 500 }}>
-                                Menampilkan {filteredData.length} data nasabah
+                                Menampilkan {kycData.length} data nasabah
                             </p>
                         </div>
 
@@ -262,31 +233,42 @@ export default function KYCPage() {
                                 </svg>
                                 <input
                                     type="text"
-                                    placeholder="Cari nama atau kota..."
+                                    placeholder="Cari nama atau username..."
                                     value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
+                                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                                     style={{ background: "transparent", border: "none", color: "#0f172a", marginLeft: 10, outline: "none", fontSize: 14, minWidth: 200 }}
                                 />
                             </div>
 
-                            {/* Filter Provinsi */}
+                            {/* Row Limit */}
                             <select
-                                value={filterProvinsi}
-                                onChange={(e) => setFilterProvinsi(e.target.value)}
+                                value={limit}
+                                onChange={(e) => { setLimit(parseInt(e.target.value)); setPage(1); }}
                                 style={{
                                     background: "#ffffff", borderRadius: 10, padding: "10px 14px",
                                     border: "1px solid #e2e8f0", color: "#0f172a", fontSize: 14, outline: "none",
-                                    cursor: "pointer"
+                                    cursor: "pointer", width: 120
                                 }}>
-                                <option value="Semua">Semua Provinsi</option>
-                                <option value="DKI Jakarta">DKI Jakarta</option>
-                                <option value="Jawa Barat">Jawa Barat</option>
-                                <option value="Jawa Tengah">Jawa Tengah</option>
-                                <option value="Jawa Timur">Jawa Timur</option>
-                                <option value="Sumatera Utara">Sumatera Utara</option>
+                                <option value={10}>10 Baris</option>
+                                <option value={20}>20 Baris</option>
+                                <option value={50}>50 Baris</option>
+                                <option value={100}>100 Baris</option>
                             </select>
                         </div>
                     </div>
+
+                    {error && (
+                        <div style={{
+                            marginBottom: 24, padding: "16px", borderRadius: 12,
+                            background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)",
+                            color: "#f87171", fontSize: 13, display: "flex", alignItems: "center", gap: 12
+                        }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            {error}
+                        </div>
+                    )}
 
                     {/* Table */}
                     <div style={{
@@ -294,10 +276,10 @@ export default function KYCPage() {
                         border: "1px solid #e2e8f0", padding: 20,
                         backdropFilter: "blur(8px)", overflowX: "auto"
                     }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1000 }}>
                             <thead>
                                 <tr>
-                                    {["Nasabah", "Kota Asal", "Provinsi", "Foto KTP", "Selfie + KTP", "Status", "Aksi"].map(h => (
+                                    {["No", "Username", "Nama Lengkap", "Alamat", "ZIP", "Kota", "Provinsi", "Email", "Tipe Upload", "File", "Aksi"].map(h => (
                                         <th key={h} style={{
                                             padding: "14px 16px", fontSize: 12, fontWeight: 700,
                                             textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b",
@@ -307,56 +289,106 @@ export default function KYCPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredData.map(d => (
-                                    <tr key={d.id} style={{ transition: "background 0.2s" }} className="hover:bg-slate-50">
-                                        <td style={{ padding: "16px", borderBottom: "1px solid #f1f5f9" }}>
-                                            <div style={{ fontSize: 15, color: "#0f172a", fontWeight: 600 }}>{d.nama}</div>
-                                            <div style={{ fontSize: 12, color: "#1d4ed8", marginTop: 4, fontFamily: "var(--font-geist-mono), monospace" }}>{d.id}</div>
-                                        </td>
-                                        <td style={{ padding: "16px", fontSize: 14, color: "#0f172a", borderBottom: "1px solid #f1f5f9", fontWeight: 500 }}>{d.kota}</td>
-                                        <td style={{ padding: "16px", fontSize: 14, color: "#0f172a", borderBottom: "1px solid #f1f5f9", fontWeight: 500 }}>{d.provinsi}</td>
-                                        <td style={{ padding: "16px", borderBottom: "1px solid #f1f5f9" }}>
-                                            <div style={{ position: "relative", width: 48, height: 48, overflow: "hidden", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f1f5f9", cursor: "pointer", transition: "transform 0.2s" }}>
-                                                <img src={d.ktp} alt="KTP" onClick={() => handleImageClick(d.ktp)} className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9, transition: "transform 0.2s" }} />
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: "16px", borderBottom: "1px solid #f1f5f9" }}>
-                                            <div style={{ position: "relative", width: 48, height: 48, overflow: "hidden", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f1f5f9", cursor: "pointer", transition: "transform 0.2s" }}>
-                                                <img src={d.selfie} alt="Selfie" onClick={() => handleImageClick(d.selfie)} className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9, transition: "transform 0.2s" }} />
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: "16px", borderBottom: "1px solid #f1f5f9" }}>
-                                            <span style={{
-                                                display: "inline-flex", alignItems: "center", padding: "6px 14px",
-                                                borderRadius: 20, fontSize: 12, fontWeight: 700,
-                                                color: d.color, background: d.bg, border: `1px solid ${d.color}33`
-                                            }}>{d.status}</span>
-                                        </td>
-                                        <td style={{ padding: "16px", borderBottom: "1px solid #f1f5f9" }}>
-                                            <button style={{
-                                                background: "#eff6ff",
-                                                border: "1px solid rgba(59, 130, 246, 0.4)",
-                                                color: "#1d4ed8", padding: "8px 16px", borderRadius: 8,
-                                                fontSize: 13, cursor: "pointer", fontWeight: 600,
-                                                transition: "all 0.2s ease"
-                                            }}>Detail</button>
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan={11} style={{ padding: "60px", textAlign: "center" }}>
+                                            <div className="spinner" style={{ margin: "0 auto", width: 32, height: 32, borderTopColor: "#2563eb" }} />
+                                            <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>Memuat data KYC...</p>
                                         </td>
                                     </tr>
-                                ))}
-
-                                {filteredData.length === 0 && (
+                                ) : kycData.length > 0 ? (
+                                    kycData.map((d: any, idx: number) => (
+                                        <tr key={d.user_name + '-' + idx} style={{ transition: "background 0.2s" }} className="hover:bg-slate-50">
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b", fontFamily: "var(--font-geist-mono)" }}>{(page - 1) * limit + idx + 1}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#1d4ed8", fontFamily: "var(--font-geist-mono)" }}>{d.user_name}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a", fontWeight: 600 }}>{d.full_name}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>
+                                                <div>{d.address1}</div>
+                                                {d.address2 && <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{d.address2}</div>}
+                                            </td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b", fontFamily: "var(--font-geist-mono)" }}>{d.zip}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>{d.kode_kota}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>{d.kode_prov}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b" }}>{d.email}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+                                                <span style={{
+                                                    display: "inline-flex", padding: "4px 10px", borderRadius: 6,
+                                                    background: "#eff6ff", border: "1px solid rgba(59, 130, 246, 0.2)",
+                                                    color: "#1d4ed8", fontSize: 12, fontWeight: 600
+                                                }}>{d.upload_type}</span>
+                                            </td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+                                                {d.file_name ? (
+                                                    <div
+                                                        style={{ position: "relative", width: 48, height: 48, overflow: "hidden", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f1f5f9", cursor: "pointer", transition: "transform 0.2s" }}
+                                                        onClick={() => handleImageClick(getImageUrl(d.file_name))}
+                                                    >
+                                                        <img src={getImageUrl(d.file_name)} alt="KYC" className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.2s" }} />
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ color: "#94a3b8", fontSize: 12 }}>-</span>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+                                                <button style={{
+                                                    background: "#eff6ff",
+                                                    border: "1px solid rgba(59, 130, 246, 0.4)",
+                                                    color: "#1d4ed8", padding: "8px 16px", borderRadius: 8,
+                                                    fontSize: 13, cursor: "pointer", fontWeight: 600,
+                                                    transition: "all 0.2s ease"
+                                                }}>Detail</button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
                                     <tr>
-                                        <td colSpan={7} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
-                                            Tidak ada data yang cocok dengan pencarian Anda.
+                                        <td colSpan={11} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
+                                            Tidak ada data KYC.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
+
+                        {/* Pagination Controls */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 24, padding: "0 8px" }}>
+                            <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Halaman <span style={{ color: "#1d4ed8", fontWeight: 700 }}>{page}</span></p>
+                            <div style={{ display: "flex", gap: 12 }}>
+                                <button
+                                    disabled={page <= 1 || isLoading}
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    style={{
+                                        display: "flex", alignItems: "center", gap: 8,
+                                        padding: "8px 16px", borderRadius: 10,
+                                        background: page <= 1 ? "#f1f5f9" : "#eff6ff",
+                                        border: `1px solid ${page <= 1 ? "#e2e8f0" : "#bfdbfe"}`,
+                                        color: page <= 1 ? "#94a3b8" : "#2563eb",
+                                        cursor: page <= 1 ? "not-allowed" : "pointer",
+                                        fontSize: 13, fontWeight: 600, transition: "all 0.2s ease"
+                                    }}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                    Sebelumnya
+                                </button>
+                                <button
+                                    disabled={kycData.length < limit || isLoading}
+                                    onClick={() => setPage(p => p + 1)}
+                                    style={{
+                                        display: "flex", alignItems: "center", gap: 8,
+                                        padding: "8px 16px", borderRadius: 10,
+                                        background: kycData.length < limit ? "#f1f5f9" : "#eff6ff",
+                                        border: `1px solid ${kycData.length < limit ? "#e2e8f0" : "#bfdbfe"}`,
+                                        color: kycData.length < limit ? "#94a3b8" : "#2563eb",
+                                        cursor: kycData.length < limit ? "not-allowed" : "pointer",
+                                        fontSize: 13, fontWeight: 600, transition: "all 0.2s ease"
+                                    }}>
+                                    Selanjutnya
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </main>
             </div>
-
 
             {/* Image Enhancement Modal */}
             {isImageModalOpen && selectedImage && (
@@ -378,7 +410,7 @@ export default function KYCPage() {
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>
                     </button>
-                    
+
                     {/* Image Container */}
                     <div style={{
                         position: "relative",
@@ -386,27 +418,38 @@ export default function KYCPage() {
                         display: "flex", alignItems: "center", justifyContent: "center",
                         animation: "zoomIn 0.2s ease-out"
                     }} onClick={(e) => e.stopPropagation()}>
-                        <img 
-                            src={selectedImage} 
-                            alt="Enlarged KYC Document" 
-                            style={{ 
-                                maxWidth: "100%", maxHeight: "85vh", 
+                        <img
+                            src={selectedImage}
+                            alt="Enlarged KYC Document"
+                            style={{
+                                maxWidth: "100%", maxHeight: "85vh",
                                 objectFit: "contain", borderRadius: 12,
                                 boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
                                 border: "1px solid rgba(255,255,255,0.1)"
-                            }} 
+                            }}
                         />
                     </div>
                 </div>
             )}
 
             <style jsx>{`
+                .spinner {
+                    border: 3px solid #e2e8f0;
+                    border-radius: 50%;
+                    border-top: 3px solid #2563eb;
+                    width: 24px;
+                    height: 24px;
+                    animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
                 @keyframes zoomIn {
                     from { opacity: 0; transform: scale(0.95); }
                     to { opacity: 1; transform: scale(1); }
                 }
             `}</style>
-
         </div>
     );
 }
