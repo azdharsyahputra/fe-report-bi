@@ -22,6 +22,13 @@ export default function DashboardPage() {
         const d = String(date.getDate()).padStart(2, "0");
         return `${y}${m}${d}`;
     };
+
+    const getHtmlDate = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+    };
     
     // Default: 30 days ago to today
     const defaultEnd = new Date();
@@ -30,6 +37,22 @@ export default function DashboardPage() {
     
     const [startDate, setStartDate] = useState(getFormattedDate(defaultStart));
     const [endDate, setEndDate] = useState(getFormattedDate(defaultEnd));
+    const [inputStartDate, setInputStartDate] = useState(getHtmlDate(defaultStart));
+    const [inputEndDate, setInputEndDate] = useState(getHtmlDate(defaultEnd));
+
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setInputStartDate(val);
+        setStartDate(val.replace(/-/g, ""));
+        setPage(1);
+    };
+
+    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setInputEndDate(val);
+        setEndDate(val.replace(/-/g, ""));
+        setPage(1);
+    };
 
 
     // States for row editing
@@ -297,6 +320,23 @@ export default function DashboardPage() {
                         </div>
 
                         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                            {/* Date Filters */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#ffffff", borderRadius: 10, padding: "2px", border: "1px solid #e2e8f0" }}>
+                                <input
+                                    type="date"
+                                    value={inputStartDate}
+                                    onChange={(e: any) => handleStartDateChange(e)}
+                                    style={{ background: "transparent", border: "none", color: "#0f172a", fontSize: 13, padding: "8px 12px", outline: "none", cursor: "pointer" }}
+                                />
+                                <span style={{ color: "#94a3b8", fontSize: 13, fontWeight: 500 }}>-</span>
+                                <input
+                                    type="date"
+                                    value={inputEndDate}
+                                    onChange={(e: any) => handleEndDateChange(e)}
+                                    style={{ background: "transparent", border: "none", color: "#0f172a", fontSize: 13, padding: "8px 12px", outline: "none", cursor: "pointer" }}
+                                />
+                            </div>
+
                             {/* Search Bar */}
                             <div style={{
                                 display: "flex", alignItems: "center",
