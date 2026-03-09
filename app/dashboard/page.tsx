@@ -406,6 +406,43 @@ export default function DashboardPage() {
                                 )}
                                 Export CSV
                             </button>
+
+                            {/* Export Excel */}
+                            <button
+                                onClick={async () => {
+                                    setIsExporting(true);
+                                    try {
+                                        await reportService.exportExcel({ start_date: startDate, end_date: endDate });
+                                    } catch (err: any) {
+                                        alert(err.message || "Gagal mengunduh Excel.");
+                                    } finally {
+                                        setIsExporting(false);
+                                    }
+                                }}
+                                disabled={isExporting}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 8,
+                                    padding: "10px 16px", borderRadius: 10,
+                                    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                                    border: "none", color: "#ffffff",
+                                    fontSize: 13, fontWeight: 600, cursor: isExporting ? "not-allowed" : "pointer",
+                                    transition: "all 0.2s ease",
+                                    boxShadow: "0 2px 8px rgba(37, 99, 235, 0.3)",
+                                    opacity: isExporting ? 0.7 : 1,
+                                }}
+                            >
+                                {isExporting ? (
+                                    <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                                ) : (
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                        <line x1="16" y1="13" x2="8" y2="13" />
+                                        <line x1="16" y1="17" x2="8" y2="17" />
+                                    </svg>
+                                )}
+                                Export Excel
+                            </button>
                         </div>
                     </div>
 

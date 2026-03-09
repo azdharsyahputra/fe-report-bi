@@ -33,4 +33,26 @@ export const reportService = {
         a.remove();
         window.URL.revokeObjectURL(url);
     },
+
+    exportExcel: async (params: { start_date: string; end_date: string }) => {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const res = await fetch(
+            `http://localhost:8080/reports/paybank/export-excel?start_date=${params.start_date}&end_date=${params.end_date}`,
+            {
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+            }
+        );
+        if (!res.ok) throw new Error("Gagal mengunduh Excel.");
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `paybank_${params.start_date}_${params.end_date}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    },
 };
