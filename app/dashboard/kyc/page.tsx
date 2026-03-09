@@ -13,6 +13,7 @@ export default function KYCPage() {
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(20);
+    const [totalData, setTotalData] = useState(0);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
@@ -43,6 +44,7 @@ export default function KYCPage() {
                 search: query,
             });
             setKycData(result.data || []);
+            setTotalData(result.meta?.total || 0);
         } catch (err: any) {
             if (err.status === 401) {
                 router.push("/login");
@@ -311,23 +313,31 @@ export default function KYCPage() {
                                             <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>{d.kode_prov}</td>
                                             <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b" }}>{d.email}</td>
                                             <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
-                                                <span style={{
-                                                    display: "inline-flex", padding: "4px 10px", borderRadius: 6,
-                                                    background: "#eff6ff", border: "1px solid rgba(59, 130, 246, 0.2)",
-                                                    color: "#1d4ed8", fontSize: 12, fontWeight: 600
-                                                }}>{d.upload_type}</span>
+                                                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                                                    {(Array.isArray(d.upload_type) ? d.upload_type : [d.upload_type]).filter(Boolean).map((ut: string, i: number) => (
+                                                        <span key={i} style={{
+                                                            display: "inline-flex", padding: "3px 8px", borderRadius: 6,
+                                                            background: "#eff6ff", border: "1px solid rgba(59, 130, 246, 0.2)",
+                                                            color: "#1d4ed8", fontSize: 11, fontWeight: 600
+                                                        }}>{ut}</span>
+                                                    ))}
+                                                </div>
                                             </td>
                                             <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
-                                                {d.file_name ? (
-                                                    <div
-                                                        style={{ position: "relative", width: 48, height: 48, overflow: "hidden", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f1f5f9", cursor: "pointer", transition: "transform 0.2s" }}
-                                                        onClick={() => handleImageClick(getImageUrl(d.file_name))}
-                                                    >
-                                                        <img src={getImageUrl(d.file_name)} alt="KYC" className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.2s" }} />
-                                                    </div>
-                                                ) : (
-                                                    <span style={{ color: "#94a3b8", fontSize: 12 }}>-</span>
-                                                )}
+                                                <div style={{ display: "flex", gap: 6 }}>
+                                                    {(Array.isArray(d.file_name) ? d.file_name : [d.file_name]).filter(Boolean).map((fn: string, i: number) => (
+                                                        <div
+                                                            key={i}
+                                                            style={{ position: "relative", width: 42, height: 42, overflow: "hidden", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f1f5f9", cursor: "pointer", transition: "transform 0.2s" }}
+                                                            onClick={() => handleImageClick(getImageUrl(fn))}
+                                                        >
+                                                            <img src={getImageUrl(fn)} alt={`KYC-${i}`} className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.2s" }} />
+                                                        </div>
+                                                    ))}
+                                                    {(!d.file_name || (Array.isArray(d.file_name) && d.file_name.length === 0)) && (
+                                                        <span style={{ color: "#94a3b8", fontSize: 12 }}>-</span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
                                                 <button style={{
@@ -352,7 +362,7 @@ export default function KYCPage() {
 
                         {/* Pagination Controls */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 24, padding: "0 8px" }}>
-                            <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Halaman <span style={{ color: "#1d4ed8", fontWeight: 700 }}>{page}</span></p>
+                            <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Halaman <span style={{ color: "#1d4ed8", fontWeight: 700 }}>{page}</span> dari <span style={{ fontWeight: 600 }}>{Math.ceil(totalData / limit) || 1}</span> &middot; Total <span style={{ fontWeight: 600 }}>{totalData}</span> data</p>
                             <div style={{ display: "flex", gap: 12 }}>
                                 <button
                                     disabled={page <= 1 || isLoading}
@@ -370,15 +380,15 @@ export default function KYCPage() {
                                     Sebelumnya
                                 </button>
                                 <button
-                                    disabled={kycData.length < limit || isLoading}
+                                    disabled={page >= Math.ceil(totalData / limit) || isLoading}
                                     onClick={() => setPage(p => p + 1)}
                                     style={{
                                         display: "flex", alignItems: "center", gap: 8,
                                         padding: "8px 16px", borderRadius: 10,
-                                        background: kycData.length < limit ? "#f1f5f9" : "#eff6ff",
-                                        border: `1px solid ${kycData.length < limit ? "#e2e8f0" : "#bfdbfe"}`,
-                                        color: kycData.length < limit ? "#94a3b8" : "#2563eb",
-                                        cursor: kycData.length < limit ? "not-allowed" : "pointer",
+                                        background: page >= Math.ceil(totalData / limit) ? "#f1f5f9" : "#eff6ff",
+                                        border: `1px solid ${page >= Math.ceil(totalData / limit) ? "#e2e8f0" : "#bfdbfe"}`,
+                                        color: page >= Math.ceil(totalData / limit) ? "#94a3b8" : "#2563eb",
+                                        cursor: page >= Math.ceil(totalData / limit) ? "not-allowed" : "pointer",
                                         fontSize: 13, fontWeight: 600, transition: "all 0.2s ease"
                                     }}>
                                     Selanjutnya
