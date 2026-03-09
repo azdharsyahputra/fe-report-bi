@@ -11,6 +11,7 @@ export default function DashboardPage() {
     const [dashboardData, setDashboardData] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isExporting, setIsExporting] = useState(false);
 
     // Pagination
     const [page, setPage] = useState(1);
@@ -369,6 +370,42 @@ export default function DashboardPage() {
                                 <option value={50}>50 Baris</option>
                                 <option value={100}>100 Baris</option>
                             </select>
+
+                            {/* Export CSV */}
+                            <button
+                                onClick={async () => {
+                                    setIsExporting(true);
+                                    try {
+                                        await reportService.exportCsv({ start_date: startDate, end_date: endDate });
+                                    } catch (err: any) {
+                                        alert(err.message || "Gagal mengunduh CSV.");
+                                    } finally {
+                                        setIsExporting(false);
+                                    }
+                                }}
+                                disabled={isExporting}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 8,
+                                    padding: "10px 16px", borderRadius: 10,
+                                    background: "linear-gradient(135deg, #10b981, #059669)",
+                                    border: "none", color: "#ffffff",
+                                    fontSize: 13, fontWeight: 600, cursor: isExporting ? "not-allowed" : "pointer",
+                                    transition: "all 0.2s ease",
+                                    boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
+                                    opacity: isExporting ? 0.7 : 1,
+                                }}
+                            >
+                                {isExporting ? (
+                                    <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                                ) : (
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                        <polyline points="7 10 12 15 17 10" />
+                                        <line x1="12" y1="15" x2="12" y2="3" />
+                                    </svg>
+                                )}
+                                Export CSV
+                            </button>
                         </div>
                     </div>
 
