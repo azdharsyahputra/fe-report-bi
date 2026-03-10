@@ -15,8 +15,7 @@ export default function DashboardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isExporting, setIsExporting] = useState(false);
-    const [filterPrefixPengirim, setFilterPrefixPengirim] = useState("");
-    const [filterPrefixPenerima, setFilterPrefixPenerima] = useState("");
+    const [filterBankTujuan, setFilterBankTujuan] = useState("");
 
     // Pagination
     const [page, setPage] = useState(1);
@@ -65,7 +64,7 @@ export default function DashboardPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [tempEditData, setTempEditData] = useState<any>(null);
 
-    const fetchReports = async (pageNum = 1, limitNum = 20, query = "", start = startDate, end = endDate) => {
+    const fetchReports = async (pageNum = 1, limitNum = 20, query = "", start = startDate, end = endDate, bankTujuan = filterBankTujuan) => {
         setIsLoading(true);
         setError(null);
         try {
@@ -74,7 +73,8 @@ export default function DashboardPage() {
                 limit: limitNum,
                 search: query,
                 start_date: start,
-                end_date: end
+                end_date: end,
+                bank_tujuan: bankTujuan
             });
             setDashboardData(result.data || []);
         } catch (err: any) {
@@ -90,22 +90,17 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
-            fetchReports(page, limit, search, startDate, endDate);
+            fetchReports(page, limit, search, startDate, endDate, filterBankTujuan);
         }, 500);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [page, limit, search, startDate, endDate]);
+    }, [page, limit, search, startDate, endDate, filterBankTujuan]);
 
-    // Compute unique prefix lists from current data
-    const uniquePrefixPengirim = [...new Set(dashboardData.map((d: any) => d.prefix_pengirim).filter(Boolean))].sort() as string[];
-    const uniquePrefixPenerima = [...new Set(dashboardData.map((d: any) => d.prefix_penerima).filter(Boolean))].sort() as string[];
+    // Hardcode common bank tujuan since API filters out other banks
+    const uniqueBankTujuan = ["BCA", "BRI", "BNI", "MANDIRI", "BTN", "BSI", "CIMB", "PERMATA", "DANAMON", "MEGA", "MAYBANK"];
 
-    // Client-side filtering by prefix
-    const filteredData = dashboardData.filter((d: any) => {
-        if (filterPrefixPengirim && d.prefix_pengirim !== filterPrefixPengirim) return false;
-        if (filterPrefixPenerima && d.prefix_penerima !== filterPrefixPenerima) return false;
-        return true;
-    });
+    // Data is already filtered by backend
+    const filteredData = dashboardData;
 
     const handleEditClick = (record: any) => {
         setEditingId(record.id);
@@ -242,42 +237,28 @@ export default function DashboardPage() {
                             <option value={100}>100 Baris</option>
                         </select>
 
-                        {/* Prefix Pengirim Filter */}
+                        {/* Bank Tujuan Filter */}
                         <select
-                            value={filterPrefixPengirim}
-                            onChange={(e) => setFilterPrefixPengirim(e.target.value)}
+                            value={filterBankTujuan}
+                            onChange={(e) => { setFilterBankTujuan(e.target.value); setPage(1); }}
                             style={{
                                 background: "#ffffff", borderRadius: 10, padding: "10px 14px",
                                 border: "1px solid #e2e8f0", color: "#0f172a", fontSize: 13, outline: "none",
                                 cursor: "pointer", minWidth: 150
                             }}>
-                            <option value="">Semua Prefix Pengirim</option>
-                            {uniquePrefixPengirim.map((p: string) => (
-                                <option key={p} value={p}>{p}</option>
+                            <option value="">Semua Bank Tujuan</option>
+                            {uniqueBankTujuan.map((bank: string) => (
+                                <option key={bank} value={bank}>{bank}</option>
                             ))}
                         </select>
 
-                        {/* Prefix Penerima Filter */}
-                        <select
-                            value={filterPrefixPenerima}
-                            onChange={(e) => setFilterPrefixPenerima(e.target.value)}
-                            style={{
-                                background: "#ffffff", borderRadius: 10, padding: "10px 14px",
-                                border: "1px solid #e2e8f0", color: "#0f172a", fontSize: 13, outline: "none",
-                                cursor: "pointer", minWidth: 150
-                            }}>
-                            <option value="">Semua Prefix Penerima</option>
-                            {uniquePrefixPenerima.map((p: string) => (
-                                <option key={p} value={p}>{p}</option>
-                            ))}
-                        </select>
 
                         {/* Export CSV */}
                         <button
                             onClick={async () => {
                                 setIsExporting(true);
                                 try {
-                                    await reportService.exportCsv({ start_date: startDate, end_date: endDate });
+                                    await reportService.exportCsv({ start_date: startDate, end_date: endDate, bank_tujuan: filterBankTujuan });
                                 } catch (err: any) {
                                     alert(err.message || "Gagal mengunduh CSV.");
                                 } finally {
@@ -313,7 +294,7 @@ export default function DashboardPage() {
                             onClick={async () => {
                                 setIsExporting(true);
                                 try {
-                                    await reportService.exportExcel({ start_date: startDate, end_date: endDate });
+                                    await reportService.exportExcel({ start_date: startDate, end_date: endDate, bank_tujuan: filterBankTujuan });
                                 } catch (err: any) {
                                     alert(err.message || "Gagal mengunduh Excel.");
                                 } finally {
