@@ -1,4 +1,4 @@
-import { apiClient } from "../api-client";
+import { apiClient, BASE_URL } from "../api-client";
 
 export const reportService = {
     getPaybankReports: (params: { page?: number; limit?: number; search?: string; start_date?: string; end_date?: string } = {}) => {
@@ -15,7 +15,7 @@ export const reportService = {
     exportCsv: async (params: { start_date: string; end_date: string }) => {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
         const res = await fetch(
-            `http://localhost:8080/reports/paybank/export-csv?start_date=${params.start_date}&end_date=${params.end_date}`,
+            `${BASE_URL}/reports/paybank/export-csv?start_date=${params.start_date}&end_date=${params.end_date}`,
             {
                 headers: {
                     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -37,7 +37,7 @@ export const reportService = {
     exportExcel: async (params: { start_date: string; end_date: string }) => {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
         const res = await fetch(
-            `http://localhost:8080/reports/paybank/export-excel?start_date=${params.start_date}&end_date=${params.end_date}`,
+            `${BASE_URL}/reports/paybank/export-excel?start_date=${params.start_date}&end_date=${params.end_date}`,
             {
                 headers: {
                     ...(token ? { Authorization: `Bearer ${token}` } : {}),

@@ -359,14 +359,39 @@ body {
 .error-message {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 10px;
-  padding: 12px 16px;
-  color: #fca5a5;
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #ef4444;
   font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  animation: fadeInUp 0.3s ease-out;
+  gap: 10px;
+  animation: fadeInUp 0.3s ease-out, shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+  font-weight: 500;
+}
+
+@keyframes shake {
+
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
 }
 
 /* =============================== */

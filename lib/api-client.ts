@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 type RequestOptions = {
     method?: string;
@@ -29,17 +29,38 @@ async function fetcher(endpoint: string, options: RequestOptions = {}) {
         }
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, config);
-    const result = await response.json();
+    try {
+        const response = await fetch(`${BASE_URL}${endpoint}`, config);
+        const result = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-        const error = new Error(result.message || "Something went wrong");
-        (error as any).status = response.status;
-        (error as any).data = result.data;
-        throw error;
+        if (!response.ok) {
+            let message = "Terjadi kesalahan pada server.";
+
+            if (response.status === 401) {
+                message = "Email atau password salah.";
+            } else if (response.status === 403) {
+                message = "Anda tidak memiliki akses ke fitur ini.";
+            } else if (response.status === 404) {
+                message = "Layanan tidak ditemukan.";
+            } else if (response.status >= 500) {
+                message = "Server sedang mengalami gangguan. Silakan coba lagi nanti.";
+            } else if (result.message) {
+                message = result.message;
+            }
+
+            const error = new Error(message);
+            (error as any).status = response.status;
+            (error as any).data = result.data;
+            throw error;
+        }
+
+        return result;
+    } catch (err: any) {
+        if (err.name === "TypeError" && err.message === "Failed to fetch") {
+            throw new Error("Tidak dapat terhubung ke server. Periksa koneksi internet Anda.");
+        }
+        throw err;
     }
-
-    return result;
 }
 
 export const apiClient = {
