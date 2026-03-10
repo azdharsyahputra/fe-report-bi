@@ -58,4 +58,14 @@ export const reportService = {
         a.remove();
         window.URL.revokeObjectURL(url);
     },
+
+    getMissingBranchReports: (params: { page?: number; limit?: number; start_date?: string; end_date?: string } = {}) => {
+        const query = new URLSearchParams();
+        if (params.page) query.append("page", params.page.toString());
+        if (params.limit) query.append("limit", params.limit.toString());
+        if (params.start_date) query.append("start_date", params.start_date);
+        if (params.end_date) query.append("end_date", params.end_date);
+
+        return apiClient.get(`/reports/missing-branch?${query.toString()}`);
+    },
 };
