@@ -12,9 +12,12 @@ export default function MissingBranchPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [data, setData] = useState<any[]>([]);
+    const [filterBankTujuan, setFilterBankTujuan] = useState("");
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(20);
     const [total, setTotal] = useState(0);
+
+    const bankOptions = ["BCA", "BRI", "BNI", "MANDIRI", "BTN", "BSI", "CIMB", "PERMATA", "DANAMON", "MEGA", "MAYBANK"];
 
     const getFormattedDate = (date: Date) => {
         const y = date.getFullYear();
@@ -53,7 +56,7 @@ export default function MissingBranchPage() {
         setPage(1);
     };
 
-    const fetchMissingBranch = async (pageNum = 1, limitNum = 20, start = startDate, end = endDate) => {
+    const fetchMissingBranch = async (pageNum = 1, limitNum = 20, start = startDate, end = endDate, bankTujuan = filterBankTujuan) => {
         setIsLoading(true);
         setError(null);
         try {
@@ -61,7 +64,8 @@ export default function MissingBranchPage() {
                 page: pageNum,
                 limit: limitNum,
                 start_date: start,
-                end_date: end
+                end_date: end,
+                bank_tujuan: bankTujuan
             });
             setData(result.data || []);
             setTotal(result.meta?.total || 0);
@@ -77,8 +81,12 @@ export default function MissingBranchPage() {
     };
 
     useEffect(() => {
-        fetchMissingBranch(page, limit, startDate, endDate);
-    }, [page, limit, startDate, endDate]);
+        const delayDebounceFn = setTimeout(() => {
+            fetchMissingBranch(page, limit, startDate, endDate, filterBankTujuan);
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [page, limit, startDate, endDate, filterBankTujuan]);
 
     return (
         <>
@@ -107,19 +115,35 @@ export default function MissingBranchPage() {
                         />
                     </div>
 
-                    <select
-                        value={limit}
-                        onChange={(e) => { setLimit(parseInt(e.target.value)); setPage(1); }}
-                        style={{
-                            background: "#ffffff", borderRadius: 10, padding: "10px 14px",
-                            border: "1px solid #e2e8f0", color: "#0f172a", fontSize: 14, outline: "none",
-                            cursor: "pointer", width: 120
-                        }}>
-                        <option value={10}>10 Baris</option>
-                        <option value={20}>20 Baris</option>
-                        <option value={50}>50 Baris</option>
-                        <option value={100}>100 Baris</option>
-                    </select>
+                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                        <select
+                            value={filterBankTujuan}
+                            onChange={(e) => { setFilterBankTujuan(e.target.value); setPage(1); }}
+                            style={{
+                                background: "#ffffff", borderRadius: 10, padding: "10px 14px",
+                                border: "1px solid #e2e8f0", color: "#0f172a", fontSize: 13, outline: "none",
+                                cursor: "pointer", minWidth: 150
+                            }}>
+                            <option value="">Semua Bank Tujuan</option>
+                            {bankOptions.map((bank: string) => (
+                                <option key={bank} value={bank}>{bank}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={limit}
+                            onChange={(e) => { setLimit(parseInt(e.target.value)); setPage(1); }}
+                            style={{
+                                background: "#ffffff", borderRadius: 10, padding: "10px 14px",
+                                border: "1px solid #e2e8f0", color: "#0f172a", fontSize: 14, outline: "none",
+                                cursor: "pointer", width: 120
+                            }}>
+                            <option value={10}>10 Baris</option>
+                            <option value={20}>20 Baris</option>
+                            <option value={50}>50 Baris</option>
+                            <option value={100}>100 Baris</option>
+                        </select>
+                    </div>
                 </div>
 
                 {error && (
