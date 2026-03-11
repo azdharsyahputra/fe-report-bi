@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { kycService } from "@/lib/services/kyc";
+import { kycService, KycRecord } from "@/lib/services/kyc";
 import { authService } from "@/lib/services/auth";
 import { BASE_URL } from "@/lib/api-client";
 import Header from "@/components/header";
@@ -12,7 +12,7 @@ export default function KYCPage() {
     const router = useRouter();
     const { sidebarOpen, setSidebarOpen } = useDashboard();
     const [search, setSearch] = useState("");
-    const [kycData, setKycData] = useState<any[]>([]);
+    const [kycData, setKycData] = useState<KycRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
@@ -56,11 +56,19 @@ export default function KYCPage() {
         return () => clearTimeout(delayDebounceFn);
     }, [page, limit, search]);
 
-    const getImageUrl = (fileName: string) => {
-        if (!fileName) return "";
-        // Convert Windows path to a URL-friendly path served by backend
-        const cleanName = fileName.replace(/\\/g, "/").split("/").pop() || "";
+    const getImageUrl = (fileSource: string) => {
+        if (!fileSource) return "";
+        // If it's already a full URL (from the new API)
+        if (fileSource.startsWith("http")) return fileSource;
+        
+        // Old fallback logic
+        const cleanName = fileSource.replace(/\\/g, "/").split("/").pop() || "";
         return `${BASE_URL}/kyc/images/${cleanName}`;
+    };
+
+    const getKycFiles = (filesStr: string) => {
+        if (!filesStr) return [];
+        return filesStr.split(",").map(f => f.trim());
     };
 
     return (
@@ -140,7 +148,7 @@ export default function KYCPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1000 }}>
                         <thead>
                             <tr>
-                                {["No", "Username", "Nama Lengkap", "Alamat", "ZIP", "Kota", "Provinsi", "Email", "Tipe Upload", "File", "Aksi"].map(h => (
+                                {["No", "Username", "Nama Lengkap", "NIK", "Alamat", "Wilayah", "File", "Saldo", "Tgl Gabung", "Status", "Aksi"].map(h => (
                                     <th key={h} style={{
                                         padding: "14px 16px", fontSize: 12, fontWeight: 700,
                                         textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b",
@@ -163,40 +171,46 @@ export default function KYCPage() {
                                         <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b", fontFamily: "var(--font-geist-mono)" }}>{(page - 1) * limit + idx + 1}</td>
                                         <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#1d4ed8", fontFamily: "var(--font-geist-mono)" }}>{d.user_name}</td>
                                         <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a", fontWeight: 600 }}>{d.full_name}</td>
+                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b", fontFamily: "var(--font-geist-mono)" }}>{d.nik}</td>
                                         <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>
-                                            <div>{d.address1}</div>
-                                            {d.address2 && <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{d.address2}</div>}
+                                            <div style={{ maxWidth: 200 }}>{d.alamat}</div>
+                                            {d.kode_pos && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>ZIP: {d.kode_pos}</div>}
                                         </td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b", fontFamily: "var(--font-geist-mono)" }}>{d.zip}</td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>{d.kode_kota}</td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>{d.kode_prov}</td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b" }}>{d.email}</td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
-                                            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                                                {(Array.isArray(d.upload_type) ? d.upload_type : [d.upload_type]).filter(Boolean).map((ut: string, i: number) => (
-                                                    <span key={i} style={{
-                                                        display: "inline-flex", padding: "3px 8px", borderRadius: 6,
-                                                        background: "#eff6ff", border: "1px solid rgba(59, 130, 246, 0.2)",
-                                                        color: "#1d4ed8", fontSize: 11, fontWeight: 600
-                                                    }}>{ut}</span>
-                                                ))}
-                                            </div>
+                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 12, color: "#334155" }}>
+                                            <div>{d.kec}</div>
+                                            <div style={{ fontSize: 11, color: "#64748b" }}>{d.kab_kota}</div>
+                                            <div style={{ color: "#1d4ed8", fontSize: 10, textTransform: "uppercase", fontWeight: 600 }}>{d.province}</div>
                                         </td>
                                         <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
                                             <div style={{ display: "flex", gap: 6 }}>
-                                                {(Array.isArray(d.file_name) ? d.file_name : [d.file_name]).filter(Boolean).map((fn: string, i: number) => (
+                                                {getKycFiles(d.kyc_files).map((url: string, i: number) => (
                                                     <div
                                                         key={i}
                                                         style={{ position: "relative", width: 42, height: 42, overflow: "hidden", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f1f5f9", cursor: "pointer", transition: "transform 0.2s" }}
-                                                        onClick={() => handleImageClick(getImageUrl(fn))}
+                                                        onClick={() => handleImageClick(getImageUrl(url))}
                                                     >
-                                                        <img src={getImageUrl(fn)} alt={`KYC-${i}`} className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.2s" }} />
+                                                        <img src={getImageUrl(url)} alt={`KYC-${i}`} title={url.includes("selfie") ? "Selfie" : "NIK"} className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.2s" }} />
                                                     </div>
                                                 ))}
-                                                {(!d.file_name || (Array.isArray(d.file_name) && d.file_name.length === 0)) && (
+                                                {getKycFiles(d.kyc_files).length === 0 && (
                                                     <span style={{ color: "#94a3b8", fontSize: 12 }}>-</span>
                                                 )}
                                             </div>
+                                        </td>
+                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#059669", fontWeight: 700, fontFamily: "var(--font-geist-mono)" }}>
+                                            {d.saldo ? `Rp ${parseInt(d.saldo).toLocaleString()}` : "-"}
+                                        </td>
+                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 12, color: "#64748b" }}>{d.tanggal_gabung}</td>
+                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+                                            <span style={{
+                                                padding: "4px 10px", borderRadius: 20,
+                                                fontSize: 11, fontWeight: 700,
+                                                background: d.is_kyc_approved === "1" ? "#ecfdf5" : "#fef2f2",
+                                                color: d.is_kyc_approved === "1" ? "#059669" : "#dc2626",
+                                                border: `1px solid ${d.is_kyc_approved === "1" ? "#10b98133" : "#ef444433"}`
+                                            }}>
+                                                {d.is_kyc_approved === "1" ? "APPROVED" : "PENDING"}
+                                            </span>
                                         </td>
                                         <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
                                             <button style={{
