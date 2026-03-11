@@ -329,15 +329,15 @@ export default function DashboardPage() {
                         </thead>
                         <tbody>
                             {isLoading ? (
-                                <tr>
+                                <tr key="loading">
                                     <td colSpan={12} style={{ padding: "60px", textAlign: "center" }}>
                                         <div className="spinner" style={{ margin: "0 auto", width: 32, height: 32 }} />
                                         <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>Memuat data laporan...</p>
                                     </td>
                                 </tr>
                             ) : filteredData.length > 0 ? (
-                                filteredData.map((d: any) => (
-                                    <tr key={d.id} style={{
+                                filteredData.map((d: any, idx: number) => (
+                                    <tr key={`${d.no_rek}-${d.time_start}-${idx}`} style={{
                                         transition: "background 0.2s"
                                     }} className="hover:bg-slate-50">
                                         {/* Data Pengirim */}
@@ -388,7 +388,7 @@ export default function DashboardPage() {
                                     </tr>
                                 ))
                             ) : (
-                                <tr>
+                                <tr key="empty">
                                     <td colSpan={12} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
                                         Tidak ada data transaksi.
                                     </td>
