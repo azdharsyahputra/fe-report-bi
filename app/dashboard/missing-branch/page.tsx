@@ -17,7 +17,7 @@ export default function MissingBranchPage() {
     const [limit, setLimit] = useState(20);
     const [total, setTotal] = useState(0);
 
-    const bankOptions = ["BCA", "BRI", "BNI", "MANDIRI", "BTN", "BSI", "CIMB", "PERMATA", "DANAMON", "MEGA", "MAYBANK"];
+    const bankOptions = ["ARTHA", "BCA", "BNI", "BRI", "BSM", "CIMB NIAGA", "DANAMON", "MANDIRI"];
 
     const getFormattedDate = (date: Date) => {
         const y = date.getFullYear();
