@@ -96,6 +96,21 @@ export default function KYCPage() {
         return () => clearTimeout(delayDebounceFn);
     }, [page, limit, search, startDate, endDate]);
 
+    const SkeletonRow = () => (
+        <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
+            {Array.from({ length: 9 }).map((_, i) => (
+                <td key={i} style={{ padding: "16px 16px" }}>
+                    <div className="skeleton-box" style={{ 
+                        height: i === 2 ? "16px" : "12px", 
+                        width: i === 2 ? "90%" : i === 3 ? "70%" : "60%",
+                        borderRadius: "4px"
+                    }} />
+                    {i === 3 && <div className="skeleton-box" style={{ height: "10px", width: "40%", marginTop: "6px", borderRadius: "4px" }} />}
+                </td>
+            ))}
+        </tr>
+    );
+
     // No longer needed as API returns full URLs, but kept as helper for safety
     const getImageUrl = (url: string) => {
         if (!url) return "";
@@ -215,12 +230,9 @@ export default function KYCPage() {
                         </thead>
                         <tbody>
                             {isLoading ? (
-                                <tr>
-                                    <td colSpan={9} style={{ padding: "60px", textAlign: "center" }}>
-                                        <div className="spinner" style={{ margin: "0 auto", width: 32, height: 32, borderTopColor: "#2563eb" }} />
-                                        <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>Memuat data KYC...</p>
-                                    </td>
-                                </tr>
+                                Array.from({ length: 8 }).map((_, i) => (
+                                    <SkeletonRow key={`skeleton-${i}`} />
+                                ))
                             ) : kycData.length > 0 ? (
                                 kycData.map((d: KycItem, idx: number) => {
                                     const kycFiles = d.kyc_files ? d.kyc_files.split(',') : [];
@@ -375,6 +387,15 @@ export default function KYCPage() {
                     width: 24px;
                     height: 24px;
                     animation: spin 1s linear infinite;
+                }
+                .skeleton-box {
+                    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+                    background-size: 200% 100%;
+                    animation: skeleton-loading 1.5s infinite linear;
+                }
+                @keyframes skeleton-loading {
+                    0% { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
                 }
                 @keyframes spin {
                     0% { transform: rotate(0deg); }

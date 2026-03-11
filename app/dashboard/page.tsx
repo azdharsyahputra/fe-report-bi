@@ -100,6 +100,20 @@ export default function DashboardPage() {
     const filteredData = dashboardData;
 
 
+    const SkeletonRow = () => (
+        <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
+            {Array.from({ length: 12 }).map((_, i) => (
+                <td key={i} style={{ padding: "16px 12px" }}>
+                    <div className="skeleton-box" style={{ 
+                        height: i % 3 === 0 ? "16px" : "12px", 
+                        width: i % 2 === 0 ? "80%" : "60%",
+                        borderRadius: "4px"
+                    }} />
+                </td>
+            ))}
+        </tr>
+    );
+
     const CellContent = ({ value, align = "left", bold = false, monospaced = false, blue = false, green = false }: any) => {
         return (
             <span style={{
@@ -329,12 +343,9 @@ export default function DashboardPage() {
                         </thead>
                         <tbody>
                             {isLoading ? (
-                                <tr key="loading">
-                                    <td colSpan={12} style={{ padding: "60px", textAlign: "center" }}>
-                                        <div className="spinner" style={{ margin: "0 auto", width: 32, height: 32 }} />
-                                        <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>Memuat data laporan...</p>
-                                    </td>
-                                </tr>
+                                Array.from({ length: 8 }).map((_, i) => (
+                                    <SkeletonRow key={`skeleton-${i}`} />
+                                ))
                             ) : filteredData.length > 0 ? (
                                 filteredData.map((d: any, idx: number) => (
                                     <tr key={`${d.no_rek}-${d.time_start}-${idx}`} style={{
@@ -444,6 +455,15 @@ export default function DashboardPage() {
                     width: 24px;
                     height: 24px;
                     animation: spin 1s linear infinite;
+                }
+                .skeleton-box {
+                    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+                    background-size: 200% 100%;
+                    animation: skeleton-loading 1.5s infinite linear;
+                }
+                @keyframes skeleton-loading {
+                    0% { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
                 }
                 @keyframes spin {
                     0% { transform: rotate(0deg); }

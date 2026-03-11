@@ -18,6 +18,21 @@ export default function BranchPage() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(20);
 
+    const SkeletonRow = () => (
+        <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+                <td key={i} style={{ padding: "16px 16px" }}>
+                    <div className="skeleton-box" style={{ 
+                        height: i === 1 ? "16px" : "12px", 
+                        width: i === 1 ? "90%" : i === 3 ? "70%" : "60%",
+                        borderRadius: "4px"
+                    }} />
+                    {i === 3 && <div className="skeleton-box" style={{ height: "10px", width: "40%", marginTop: "6px", borderRadius: "4px" }} />}
+                </td>
+            ))}
+        </tr>
+    );
+
 
     const fetchBranches = async (bankName = "", query = "", pageNum = 1, limitNum = 20) => {
         setIsLoading(true);
@@ -168,12 +183,9 @@ export default function BranchPage() {
                         </thead>
                         <tbody>
                             {isLoading ? (
-                                <tr>
-                                    <td colSpan={5} style={{ padding: "60px", textAlign: "center" }}>
-                                        <div className="spinner" style={{ margin: "0 auto", width: 32, height: 32, borderTopColor: "#2563eb" }} />
-                                        <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>Memuat data branch...</p>
-                                    </td>
-                                </tr>
+                                Array.from({ length: 8 }).map((_, i) => (
+                                    <SkeletonRow key={`skeleton-${i}`} />
+                                ))
                             ) : branches.length > 0 ? (
                                 branches.map((item: any, idx: number) => (
                                     <tr key={item.id} style={{ transition: "background 0.2s" }} className="hover:bg-slate-50">
@@ -252,6 +264,15 @@ export default function BranchPage() {
                     width: 20px;
                     height: 20px;
                     animation: spin 1s linear infinite;
+                }
+                .skeleton-box {
+                    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+                    background-size: 200% 100%;
+                    animation: skeleton-loading 1.5s infinite linear;
+                }
+                @keyframes skeleton-loading {
+                    0% { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
                 }
                 @keyframes spin {
                     0% { transform: rotate(0deg); }

@@ -33,7 +33,15 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     return (
         <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
             <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
-            <div style={{ marginLeft: 260, flex: 1, minWidth: 0 }} className="max-md:!ml-0">
+            <div 
+                style={{ 
+                    marginLeft: sidebarOpen ? 260 : 80, 
+                    flex: 1, 
+                    minWidth: 0,
+                    transition: "margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                }} 
+                className="max-md:!ml-0"
+            >
                 {children}
             </div>
         </div>
