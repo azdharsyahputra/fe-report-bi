@@ -299,7 +299,7 @@ export default function DashboardPage() {
                             <tr>
                                 <th colSpan={3} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", borderRight: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Data Pengirim</th>
                                 <th colSpan={4} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", borderRight: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Data Penerima</th>
-                                <th colSpan={3} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Transaksi</th>
+                                <th colSpan={4} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Transaksi</th>
                             </tr>
                             <tr>
                                 {/* Pengirim */}
@@ -318,7 +318,7 @@ export default function DashboardPage() {
                                     }}>{h}</th>
                                 ))}
                                 {/* Transaksi */}
-                                {["Produk", "Volume", "Jumlah (Rp)"].map(h => (
+                                {["Produk", "Volume", "Jumlah (Rp)", "Waktu"].map(h => (
                                     <th key={'txn-' + h} style={{
                                         padding: "14px 10px", fontSize: 12, fontWeight: 600,
                                         color: "#334155", borderBottom: "1px solid #e2e8f0", textAlign: "right",
@@ -330,7 +330,7 @@ export default function DashboardPage() {
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={11} style={{ padding: "60px", textAlign: "center" }}>
+                                    <td colSpan={12} style={{ padding: "60px", textAlign: "center" }}>
                                         <div className="spinner" style={{ margin: "0 auto", width: 32, height: 32 }} />
                                         <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>Memuat data laporan...</p>
                                     </td>
@@ -382,11 +382,14 @@ export default function DashboardPage() {
                                         <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 15 }}>
                                             <CellContent value={d.jumlah} align="right" bold green monospaced />
                                         </td>
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b" }}>
+                                            <CellContent value={d.time_start} align="right" monospaced />
+                                        </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={11} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
+                                    <td colSpan={12} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
                                         Tidak ada data transaksi.
                                     </td>
                                 </tr>
