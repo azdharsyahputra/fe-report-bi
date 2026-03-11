@@ -93,11 +93,14 @@ export default function BranchPage() {
                                 cursor: "pointer", flex: 1
                             }}>
                             <option value="">Semua Bank</option>
-                            <option value="BCA">Bank Central Asia (BCA)</option>
-                            <option value="BRI">Bank Rakyat Indonesia (BRI)</option>
-                            <option value="BNI">Bank Negara Indonesia (BNI)</option>
-                            <option value="MANDIRI">Bank Mandiri</option>
-                            <option value="BTN">Bank Tabungan Negara (BTN)</option>
+                            <option value="BCA">BCA</option>
+                            <option value="ARTHA">ARTHA</option>
+                            <option value="BNI">BNI</option>
+                            <option value="BRI">BRI</option>
+                            <option value="BSM">BSM</option>
+                            <option value="MANDIRI">MANDIRI</option>
+                            <option value="CIMB NIAGA">CIMB NIAGA</option>
+                            <option value="DANAMON">DANAMON</option>
                         </select>
 
                         <select
