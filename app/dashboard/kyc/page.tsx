@@ -204,7 +204,7 @@ export default function KYCPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1000 }}>
                         <thead>
                             <tr>
-                                {["No", "Username", "Nama Lengkap", "Alamat", "Kec/Kel", "Kab/Provinsi", "Saldo", "Status", "File", "Aksi"].map(h => (
+                                {["No", "Username", "Nama Lengkap", "Alamat", "Kec/Kel", "Kab/Provinsi", "Saldo", "Status", "File"].map(h => (
                                     <th key={h} style={{
                                         padding: "14px 16px", fontSize: 12, fontWeight: 700,
                                         textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b",
@@ -216,7 +216,7 @@ export default function KYCPage() {
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={11} style={{ padding: "60px", textAlign: "center" }}>
+                                    <td colSpan={9} style={{ padding: "60px", textAlign: "center" }}>
                                         <div className="spinner" style={{ margin: "0 auto", width: 32, height: 32, borderTopColor: "#2563eb" }} />
                                         <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>Memuat data KYC...</p>
                                     </td>
@@ -273,22 +273,13 @@ export default function KYCPage() {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
-                                                <button style={{
-                                                    background: "#f8fafc",
-                                                    border: "1px solid #e2e8f0",
-                                                    color: "#475569", padding: "6px 12px", borderRadius: 8,
-                                                    fontSize: 12, cursor: "pointer", fontWeight: 600,
-                                                    transition: "all 0.2s ease"
-                                                }} title="Lihat detail lengkap">Detail</button>
-                                            </td>
                                         </tr>
                                     );
                                 })
 
                             ) : (
                                 <tr>
-                                    <td colSpan={11} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
+                                    <td colSpan={9} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
                                         Tidak ada data KYC.
                                     </td>
                                 </tr>

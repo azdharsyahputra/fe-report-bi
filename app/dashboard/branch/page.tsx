@@ -18,10 +18,6 @@ export default function BranchPage() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(20);
 
-    // Edit Modal State
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingBranch, setEditingBranch] = useState<any>(null);
-    const [isUpdating, setIsUpdating] = useState(false);
 
     const fetchBranches = async (bankName = "", query = "", pageNum = 1, limitNum = 20) => {
         setIsLoading(true);
@@ -46,32 +42,6 @@ export default function BranchPage() {
         }
     };
 
-    const handleOpenEdit = (branch: any) => {
-        setEditingBranch({ ...branch });
-        setIsEditModalOpen(true);
-    };
-
-    const handleUpdate = async () => {
-        if (!editingBranch) return;
-
-        setIsUpdating(true);
-        try {
-            await branchService.updateBranch(editingBranch.id, {
-                name: editingBranch.name,
-                branch_code: editingBranch.branch_code,
-                regencies_code: editingBranch.regencies_code,
-                regencies: editingBranch.regencies,
-                office_type: editingBranch.office_type
-            });
-
-            setIsEditModalOpen(false);
-            fetchBranches(search, searchQuery, page, limit);
-        } catch (err: any) {
-            alert(err.message || "Gagal memperbarui data.");
-        } finally {
-            setIsUpdating(false);
-        }
-    };
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -94,96 +64,6 @@ export default function BranchPage() {
                 setSidebarOpen={setSidebarOpen}
             />
 
-            {/* Edit Modal */}
-            {isEditModalOpen && (
-                <div style={{
-                    position: "fixed", inset: 0, zIndex: 100,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    padding: 20, background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)"
-                }}>
-                    <div style={{
-                        width: "100%", maxWidth: 500, background: "#ffffff",
-                        borderRadius: 20, border: "1px solid #e2e8f0",
-                        padding: 32, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
-                    }}>
-                        <div style={{ marginBottom: 24 }}>
-                            <h3 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", margin: "0 0 8px 0" }}>Update Branch</h3>
-                            <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Ubah informasi detail cabang bank</p>
-                        </div>
-
-                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                            <div>
-                                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 6, textTransform: "uppercase" }}>Nama Bank</label>
-                                <input
-                                    type="text"
-                                    value={editingBranch?.name || ""}
-                                    onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
-                                    style={{ width: "100%", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "10px 14px", color: "#0f172a", outline: "none" }}
-                                />
-                            </div>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                                <div>
-                                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 6, textTransform: "uppercase" }}>Branch Code</label>
-                                    <input
-                                        type="text"
-                                        value={editingBranch?.branch_code || ""}
-                                        onChange={(e) => setEditingBranch({ ...editingBranch, branch_code: e.target.value })}
-                                        style={{ width: "100%", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "10px 14px", color: "#0f172a", outline: "none" }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 6, textTransform: "uppercase" }}>Regencies Code</label>
-                                    <input
-                                        type="text"
-                                        value={editingBranch?.regencies_code || ""}
-                                        onChange={(e) => setEditingBranch({ ...editingBranch, regencies_code: e.target.value })}
-                                        style={{ width: "100%", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "10px 14px", color: "#0f172a", outline: "none" }}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 6, textTransform: "uppercase" }}>Wilayah</label>
-                                <input
-                                    type="text"
-                                    value={editingBranch?.regencies || ""}
-                                    onChange={(e) => setEditingBranch({ ...editingBranch, regencies: e.target.value })}
-                                    style={{ width: "100%", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "10px 14px", color: "#0f172a", outline: "none" }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 6, textTransform: "uppercase" }}>Tipe Kantor</label>
-                                <input
-                                    type="text"
-                                    value={editingBranch?.office_type || ""}
-                                    onChange={(e) => setEditingBranch({ ...editingBranch, office_type: e.target.value })}
-                                    style={{ width: "100%", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "10px 14px", color: "#0f172a", outline: "none" }}
-                                />
-                            </div>
-                        </div>
-
-                        <div style={{ display: "flex", gap: 12, marginTop: 32 }}>
-                            <button
-                                onClick={() => setIsEditModalOpen(false)}
-                                style={{ flex: 1, padding: "12px", borderRadius: 12, background: "transparent", border: "1px solid #cbd5e1", color: "#64748b", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={handleUpdate}
-                                disabled={isUpdating}
-                                style={{
-                                    flex: 1, padding: "12px", borderRadius: 12, background: "linear-gradient(135deg, #2563eb, #3b82f6)",
-                                    border: "none", color: "#ffffff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-                                    boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8
-                                }}
-                            >
-                                {isUpdating && <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />}
-                                Simpan Perubahan
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <main style={{ padding: 28 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, gap: 16 }}>
@@ -274,11 +154,11 @@ export default function BranchPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
                             <tr>
-                                {["No", "Bank", "Branch Code", "Wilayah", "Tipe Kantor", "Aksi"].map((h) => (
+                                {["No", "Bank", "Branch Code", "Wilayah", "Tipe Kantor"].map((h) => (
                                     <th key={h} style={{
                                         padding: "14px 16px", fontSize: 12, fontWeight: 700,
                                         color: "#64748b", borderBottom: "1px solid #e2e8f0",
-                                        textAlign: h === "Aksi" ? "center" : "left", textTransform: "uppercase", letterSpacing: "0.05em"
+                                        textAlign: "left", textTransform: "uppercase", letterSpacing: "0.05em"
                                     }}>{h}</th>
                                 ))}
                             </tr>
@@ -286,7 +166,7 @@ export default function BranchPage() {
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={6} style={{ padding: "60px", textAlign: "center" }}>
+                                    <td colSpan={5} style={{ padding: "60px", textAlign: "center" }}>
                                         <div className="spinner" style={{ margin: "0 auto", width: 32, height: 32, borderTopColor: "#2563eb" }} />
                                         <p style={{ color: "#64748b", fontSize: 14, marginTop: 16 }}>Memuat data branch...</p>
                                     </td>
@@ -310,24 +190,11 @@ export default function BranchPage() {
                                                 {item.office_type}
                                             </span>
                                         </td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", textAlign: "center" }}>
-                                            <button
-                                                onClick={() => handleOpenEdit(item)}
-                                                style={{
-                                                    padding: "6px 12px", borderRadius: 8, background: "rgba(37, 99, 235, 0.1)",
-                                                    border: "1px solid #e2e8f0", color: "#1d4ed8", fontSize: 12,
-                                                    fontWeight: 600, cursor: "pointer", transition: "all 0.2s"
-                                                }}
-                                                className="hover:bg-blue-50"
-                                            >
-                                                Update
-                                            </button>
-                                        </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={6} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
+                                    <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
                                         Tidak ada data branch bank.
                                     </td>
                                 </tr>
