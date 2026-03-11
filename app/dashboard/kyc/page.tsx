@@ -20,6 +20,44 @@ export default function KYCPage() {
     const [totalData, setTotalData] = useState(0);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    
+    // Date Helpers
+    const getFormattedDate = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}${m}${d}`;
+    };
+
+    const getHtmlDate = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+    };
+
+    const defaultEnd = new Date();
+    const defaultStart = new Date();
+    defaultStart.setDate(defaultEnd.getDate() - 30);
+
+    const [startDate, setStartDate] = useState(getFormattedDate(defaultStart));
+    const [endDate, setEndDate] = useState(getFormattedDate(defaultEnd));
+    const [inputStartDate, setInputStartDate] = useState(getHtmlDate(defaultStart));
+    const [inputEndDate, setInputEndDate] = useState(getHtmlDate(defaultEnd));
+
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setInputStartDate(val);
+        setStartDate(val.replace(/-/g, ""));
+        setPage(1);
+    };
+
+    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setInputEndDate(val);
+        setEndDate(val.replace(/-/g, ""));
+        setPage(1);
+    };
 
     const handleImageClick = (imageUrl: string) => {
         setSelectedImage(imageUrl);
@@ -27,7 +65,7 @@ export default function KYCPage() {
     };
 
 
-    const fetchKycData = async (pageNum = 1, limitNum = 20, query = "") => {
+    const fetchKycData = async (pageNum = 1, limitNum = 20, query = "", start = startDate, end = endDate) => {
         setIsLoading(true);
         setError(null);
         try {
@@ -35,6 +73,8 @@ export default function KYCPage() {
                 page: pageNum,
                 limit: limitNum,
                 search: query,
+                start_date: start,
+                end_date: end,
             });
             setKycData(result.data || []);
             setTotalData(result.meta?.total || 0);
@@ -51,10 +91,10 @@ export default function KYCPage() {
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
-            fetchKycData(page, limit, search);
+            fetchKycData(page, limit, search, startDate, endDate);
         }, 500);
         return () => clearTimeout(delayDebounceFn);
-    }, [page, limit, search]);
+    }, [page, limit, search, startDate, endDate]);
 
     // No longer needed as API returns full URLs, but kept as helper for safety
     const getImageUrl = (url: string) => {
@@ -74,13 +114,36 @@ export default function KYCPage() {
             />
 
             {/* Main Content */}
-            <main style={{ padding: 28 }}>
-
+            <main style={{ padding: 28, background: "#f8fafc" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, gap: 16, flexWrap: "wrap" }}>
-                    <div>
-                        <p style={{ fontSize: 14, color: "#0f172a", margin: 0, fontWeight: 500 }}>
-                            Menampilkan {kycData.length} data nasabah
-                        </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        {/* Date Filter */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#ffffff", borderRadius: 10, padding: "2px", border: "1px solid #e2e8f0" }}>
+                            <div style={{ display: "flex", alignItems: "center", padding: "0 8px 0 12px" }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                            </div>
+                            <input
+                                type="date"
+                                value={inputStartDate}
+                                onChange={handleStartDateChange}
+                                style={{ background: "transparent", border: "none", color: "#0f172a", fontSize: 13, padding: "8px 0", outline: "none", cursor: "pointer", width: 110 }}
+                            />
+                            <span style={{ color: "#94a3b8", fontSize: 13, fontWeight: 500 }}>-</span>
+                            <input
+                                type="date"
+                                value={inputEndDate}
+                                onChange={handleEndDateChange}
+                                style={{ background: "transparent", border: "none", color: "#0f172a", fontSize: 13, padding: "8px 12px 8px 0", outline: "none", cursor: "pointer", width: 125 }}
+                            />
+                        </div>
+
+                        <div>
+                            <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
+                                <span style={{ fontWeight: 600, color: "#0f172a" }}>{totalData}</span> nasabah ditemukan
+                            </p>
+                        </div>
                     </div>
 
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
