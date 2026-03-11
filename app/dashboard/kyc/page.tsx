@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { kycService, KycRecord } from "@/lib/services/kyc";
+import { kycService, KycItem } from "@/lib/services/kyc";
 import { authService } from "@/lib/services/auth";
 import { BASE_URL } from "@/lib/api-client";
 import Header from "@/components/header";
@@ -12,7 +12,7 @@ export default function KYCPage() {
     const router = useRouter();
     const { sidebarOpen, setSidebarOpen } = useDashboard();
     const [search, setSearch] = useState("");
-    const [kycData, setKycData] = useState<KycRecord[]>([]);
+    const [kycData, setKycData] = useState<KycItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
@@ -56,19 +56,12 @@ export default function KYCPage() {
         return () => clearTimeout(delayDebounceFn);
     }, [page, limit, search]);
 
-    const getImageUrl = (fileSource: string) => {
-        if (!fileSource) return "";
-        // If it's already a full URL (from the new API)
-        if (fileSource.startsWith("http")) return fileSource;
-        
-        // Old fallback logic
-        const cleanName = fileSource.replace(/\\/g, "/").split("/").pop() || "";
+    // No longer needed as API returns full URLs, but kept as helper for safety
+    const getImageUrl = (url: string) => {
+        if (!url) return "";
+        if (url.startsWith("http")) return url;
+        const cleanName = url.replace(/\\/g, "/").split("/").pop() || "";
         return `${BASE_URL}/kyc/images/${cleanName}`;
-    };
-
-    const getKycFiles = (filesStr: string) => {
-        if (!filesStr) return [];
-        return filesStr.split(",").map(f => f.trim());
     };
 
     return (
@@ -148,7 +141,7 @@ export default function KYCPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1000 }}>
                         <thead>
                             <tr>
-                                {["No", "Username", "Nama Lengkap", "NIK", "Alamat", "Wilayah", "File", "Saldo", "Tgl Gabung", "Status", "Aksi"].map(h => (
+                                {["No", "Username", "Nama Lengkap", "Alamat", "Kec/Kel", "Kab/Provinsi", "Saldo", "Status", "File", "Aksi"].map(h => (
                                     <th key={h} style={{
                                         padding: "14px 16px", fontSize: 12, fontWeight: 700,
                                         textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b",
@@ -166,63 +159,70 @@ export default function KYCPage() {
                                     </td>
                                 </tr>
                             ) : kycData.length > 0 ? (
-                                kycData.map((d: any, idx: number) => (
-                                    <tr key={d.user_name + '-' + idx} style={{ transition: "background 0.2s" }} className="hover:bg-slate-50">
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b", fontFamily: "var(--font-geist-mono)" }}>{(page - 1) * limit + idx + 1}</td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#1d4ed8", fontFamily: "var(--font-geist-mono)" }}>{d.user_name}</td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a", fontWeight: 600 }}>{d.full_name}</td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b", fontFamily: "var(--font-geist-mono)" }}>{d.nik}</td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>
-                                            <div style={{ maxWidth: 200 }}>{d.alamat}</div>
-                                            {d.kode_pos && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>ZIP: {d.kode_pos}</div>}
-                                        </td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 12, color: "#334155" }}>
-                                            <div>{d.kec}</div>
-                                            <div style={{ fontSize: 11, color: "#64748b" }}>{d.kab_kota}</div>
-                                            <div style={{ color: "#1d4ed8", fontSize: 10, textTransform: "uppercase", fontWeight: 600 }}>{d.province}</div>
-                                        </td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
-                                            <div style={{ display: "flex", gap: 6 }}>
-                                                {getKycFiles(d.kyc_files).map((url: string, i: number) => (
-                                                    <div
-                                                        key={i}
-                                                        style={{ position: "relative", width: 42, height: 42, overflow: "hidden", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f1f5f9", cursor: "pointer", transition: "transform 0.2s" }}
-                                                        onClick={() => handleImageClick(getImageUrl(url))}
-                                                    >
-                                                        <img src={getImageUrl(url)} alt={`KYC-${i}`} title={url.includes("selfie") ? "Selfie" : "NIK"} className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.2s" }} />
-                                                    </div>
-                                                ))}
-                                                {getKycFiles(d.kyc_files).length === 0 && (
-                                                    <span style={{ color: "#94a3b8", fontSize: 12 }}>-</span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#059669", fontWeight: 700, fontFamily: "var(--font-geist-mono)" }}>
-                                            {d.saldo ? `Rp ${parseInt(d.saldo).toLocaleString()}` : "-"}
-                                        </td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 12, color: "#64748b" }}>{d.tanggal_gabung}</td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
-                                            <span style={{
-                                                padding: "4px 10px", borderRadius: 20,
-                                                fontSize: 11, fontWeight: 700,
-                                                background: d.is_kyc_approved === "1" ? "#ecfdf5" : "#fef2f2",
-                                                color: d.is_kyc_approved === "1" ? "#059669" : "#dc2626",
-                                                border: `1px solid ${d.is_kyc_approved === "1" ? "#10b98133" : "#ef444433"}`
-                                            }}>
-                                                {d.is_kyc_approved === "1" ? "APPROVED" : "PENDING"}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
-                                            <button style={{
-                                                background: "#eff6ff",
-                                                border: "1px solid rgba(59, 130, 246, 0.4)",
-                                                color: "#1d4ed8", padding: "8px 16px", borderRadius: 8,
-                                                fontSize: 13, cursor: "pointer", fontWeight: 600,
-                                                transition: "all 0.2s ease"
-                                            }}>Detail</button>
-                                        </td>
-                                    </tr>
-                                ))
+                                kycData.map((d: KycItem, idx: number) => {
+                                    const kycFiles = d.kyc_files ? d.kyc_files.split(',') : [];
+                                    const isApproved = d.is_kyc_approved === "1";
+                                    
+                                    return (
+                                        <tr key={d.user_name + '-' + idx} style={{ transition: "background 0.2s" }} className="hover:bg-slate-50">
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b", fontFamily: "var(--font-geist-mono)" }}>{(page - 1) * limit + idx + 1}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#1d4ed8", fontFamily: "var(--font-geist-mono)" }}>{d.user_name}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a", fontWeight: 600 }}>{d.full_name}</td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>
+                                                <div style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.alamat}>
+                                                    {d.alamat}
+                                                </div>
+                                                <div style={{ fontSize: 11, color: "#64748b" }}>ZIP: {d.kode_pos}</div>
+                                            </td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>
+                                                <div>{d.kec}</div>
+                                                <div style={{ fontSize: 11, color: "#64748b" }}>{d.kel_des}</div>
+                                            </td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>
+                                                <div>{d.kab_kota}</div>
+                                                <div style={{ fontSize: 11, color: "#64748b" }}>{d.province}</div>
+                                            </td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#059669", fontWeight: 600 }}>
+                                                Rp {parseInt(d.saldo).toLocaleString('id-ID')}
+                                            </td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+                                                <span style={{
+                                                    display: "inline-flex", padding: "4px 10px", borderRadius: 20,
+                                                    background: isApproved ? "#ecfdf5" : "#fff7ed",
+                                                    color: isApproved ? "#059669" : "#ea580c",
+                                                    fontSize: 11, fontWeight: 600, border: `1px solid ${isApproved ? "#10b98133" : "#f9731633"}`
+                                                }}>
+                                                    {isApproved ? "Approved" : "Pending"}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+                                                <div style={{ display: "flex", gap: 6 }}>
+                                                    {kycFiles.length > 0 ? kycFiles.map((url: string, i: number) => (
+                                                        <div
+                                                            key={i}
+                                                            style={{ position: "relative", width: 42, height: 42, overflow: "hidden", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f1f5f9", cursor: "pointer", transition: "transform 0.2s" }}
+                                                            onClick={() => handleImageClick(getImageUrl(url))}
+                                                        >
+                                                            <img src={getImageUrl(url)} alt={`KYC-${i}`} className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.2s" }} />
+                                                        </div>
+                                                    )) : (
+                                                        <span style={{ color: "#94a3b8", fontSize: 12 }}>-</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+                                                <button style={{
+                                                    background: "#f8fafc",
+                                                    border: "1px solid #e2e8f0",
+                                                    color: "#475569", padding: "6px 12px", borderRadius: 8,
+                                                    fontSize: 12, cursor: "pointer", fontWeight: 600,
+                                                    transition: "all 0.2s ease"
+                                                }} title="Lihat detail lengkap">Detail</button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+
                             ) : (
                                 <tr>
                                     <td colSpan={11} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>

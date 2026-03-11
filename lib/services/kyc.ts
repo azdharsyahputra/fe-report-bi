@@ -1,6 +1,6 @@
 import { apiClient } from "../api-client";
 
-export interface KycRecord {
+export interface KycItem {
     user_name: string;
     full_name: string;
     is_kyc_approved: string;
@@ -9,8 +9,8 @@ export interface KycRecord {
     kode_prov: string;
     province: string;
     kode_kota: string;
-    kab_kota: string;
     alamat: string;
+    kab_kota: string;
     kode_kec: string;
     kec: string;
     kode_kel_des: string;
@@ -18,20 +18,11 @@ export interface KycRecord {
     kode_pos: string;
     tanggal_gabung: string;
     kyc_files: string;
-}
-
-export interface KycResponse {
-    data: KycRecord[];
-    message: string;
-    meta: {
-        limit: number;
-        page: number;
-        total: number;
-    };
+    email?: string; // Kept as optional if still comes from backend in some cases
 }
 
 export const kycService = {
-    getKycData: (params: { page?: number; limit?: number; search?: string } = {}): Promise<KycResponse> => {
+    getKycData: (params: { page?: number; limit?: number; search?: string } = {}): Promise<{ data: KycItem[], meta: { total: number } }> => {
         const query = new URLSearchParams();
         if (params.page) query.append("page", params.page.toString());
         if (params.limit) query.append("limit", params.limit.toString());
