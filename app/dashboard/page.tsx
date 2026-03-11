@@ -60,9 +60,6 @@ export default function DashboardPage() {
     };
 
 
-    // States for row editing
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [tempEditData, setTempEditData] = useState<any>(null);
 
     const fetchReports = async (pageNum = 1, limitNum = 20, query = "", start = startDate, end = endDate, bankTujuan = filterBankTujuan) => {
         setIsLoading(true);
@@ -102,58 +99,8 @@ export default function DashboardPage() {
     // Data is already filtered by backend
     const filteredData = dashboardData;
 
-    const handleEditClick = (record: any) => {
-        setEditingId(record.id);
-        setTempEditData({ ...record });
-    };
 
-    const handleCancelEdit = () => {
-        setEditingId(null);
-        setTempEditData(null);
-    };
-
-    const handleSaveEdit = () => {
-        if (editingId && tempEditData) {
-            // Local update (optional, usually you'd call an API here too)
-            const newData = dashboardData.map(d => d.id === editingId ? tempEditData : d);
-            setDashboardData(newData);
-            setEditingId(null);
-            setTempEditData(null);
-        }
-    };
-
-    const handleTempChange = (field: string, value: string | number) => {
-        if (tempEditData) {
-            setTempEditData({ ...tempEditData, [field]: value });
-        }
-    };
-
-    const CellContent = ({ isEditing, value, onChange, align = "left", bold = false, monospaced = false, blue = false, green = false, isNumber = false }: any) => {
-        if (isEditing) {
-            return (
-                <input
-                    type={isNumber ? "number" : "text"}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="focus:border-blue-500 focus:bg-blue-900/30 transition-colors"
-                    style={{
-                        background: "#ffffff",
-                        border: "1px solid #bfdbfe",
-                        color: blue ? "#2563eb" : green ? "#10b981" : "#0f172a",
-                        width: "100%",
-                        fontSize: "inherit",
-                        fontWeight: bold ? 600 : "inherit",
-                        outline: "none",
-                        textAlign: align as any,
-                        fontFamily: monospaced ? "var(--font-geist-mono), monospace" : "inherit",
-                        padding: "6px 8px",
-                        borderRadius: "6px",
-                        minWidth: "60px",
-                        boxShadow: "inset 0 1px 2px rgba(0,0,0,0.2)"
-                    }}
-                />
-            );
-        }
+    const CellContent = ({ value, align = "left", bold = false, monospaced = false, blue = false, green = false }: any) => {
         return (
             <span style={{
                 color: blue ? "#2563eb" : green ? "#10b981" : "inherit",
@@ -352,8 +299,7 @@ export default function DashboardPage() {
                             <tr>
                                 <th colSpan={3} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", borderRight: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Data Pengirim</th>
                                 <th colSpan={4} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", borderRight: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Data Penerima</th>
-                                <th colSpan={3} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", borderRight: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Transaksi</th>
-                                <th colSpan={1} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Pengaturan</th>
+                                <th colSpan={3} style={{ textAlign: "center", padding: "10px", borderBottom: "1px solid #e2e8f0", color: "#64748b", fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Transaksi</th>
                             </tr>
                             <tr>
                                 {/* Pengirim */}
@@ -379,12 +325,6 @@ export default function DashboardPage() {
                                         borderLeft: h === "Produk" ? "1px solid #e2e8f0" : "none"
                                     }}>{h}</th>
                                 ))}
-                                {/* Action */}
-                                <th style={{
-                                    padding: "14px 10px", fontSize: 12, fontWeight: 600,
-                                    color: "#334155", borderBottom: "1px solid #e2e8f0", textAlign: "center",
-                                    borderLeft: "1px solid #e2e8f0"
-                                }}>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -396,111 +336,54 @@ export default function DashboardPage() {
                                     </td>
                                 </tr>
                             ) : filteredData.length > 0 ? (
-                                filteredData.map((d: any, i: number) => {
-                                    const isEditing = editingId === d.id;
-                                    const currentData = isEditing ? tempEditData : d;
+                                filteredData.map((d: any) => (
+                                    <tr key={d.id} style={{
+                                        transition: "background 0.2s"
+                                    }} className="hover:bg-slate-50">
+                                        {/* Data Pengirim */}
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a" }}>
+                                            <CellContent value={d.pengirim} bold />
+                                        </td>
 
-                                    return (
-                                        <tr key={d.id} style={{
-                                            transition: "background 0.2s",
-                                            background: isEditing ? "#f8fafc" : "transparent"
-                                        }} className="hover:bg-slate-50">
-                                            {/* Data Pengirim */}
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a" }}>
-                                                <CellContent isEditing={isEditing} value={currentData.pengirim} onChange={(v: string) => handleTempChange('pengirim', v)} bold />
-                                            </td>
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
+                                            <CellContent value={d.prefix_pengirim} blue />
+                                        </td>
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>
+                                            <CellContent value={d.kota_pengirim} />
+                                        </td>
 
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
-                                                <CellContent isEditing={isEditing} value={currentData.prefix_pengirim} onChange={(v: string) => handleTempChange('prefix_pengirim', v)} blue />
-                                            </td>
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#334155" }}>
-                                                <CellContent isEditing={isEditing} value={currentData.kota_pengirim} onChange={(v: string) => handleTempChange('kota_pengirim', v)} />
-                                            </td>
+                                        {/* Data Penerima */}
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a", borderLeft: "1px solid #e2e8f0" }}>
+                                            <CellContent value={d.nama_penerima} bold />
+                                        </td>
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9" }}>
+                                            <div style={{ padding: "0 8px" }}>
+                                                <span style={{
+                                                    display: "inline-flex", alignItems: "center", padding: "4px 10px",
+                                                    borderRadius: 6, fontSize: 12, fontWeight: 700,
+                                                    color: "#2563eb", background: "#eff6ff", border: `1px solid rgba(59,130,246,0.3)`
+                                                }}>{d.bank_tujuan}</span>
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
+                                            <CellContent value={d.no_rek} monospaced />
+                                        </td>
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
+                                            <CellContent value={d.prefix_penerima} blue />
+                                        </td>
 
-                                            {/* Data Penerima */}
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a", borderLeft: "1px solid #e2e8f0" }}>
-                                                <CellContent isEditing={isEditing} value={currentData.nama_penerima} onChange={(v: string) => handleTempChange('nama_penerima', v)} bold />
-                                            </td>
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9" }}>
-                                                <div style={{ padding: isEditing ? 0 : "0 8px" }}>
-                                                    {isEditing ? (
-                                                        <input
-                                                            value={currentData.bank_tujuan}
-                                                            onChange={(e) => handleTempChange('bank_tujuan', e.target.value)}
-                                                            className="focus:border-blue-500 focus:bg-white/10 transition-colors"
-                                                            style={{
-                                                                background: "#ffffff", border: "1px solid #bfdbfe",
-                                                                color: "#2563eb", fontWeight: 700, fontSize: 12, padding: "6px 8px",
-                                                                borderRadius: 6, outline: "none", width: "100%", textAlign: "center",
-                                                                boxShadow: "inset 0 1px 2px rgba(0,0,0,0.2)"
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <span style={{
-                                                            display: "inline-flex", alignItems: "center", padding: "4px 10px",
-                                                            borderRadius: 6, fontSize: 12, fontWeight: 700,
-                                                            color: "#2563eb", background: "#eff6ff", border: `1px solid rgba(59,130,246,0.3)`
-                                                        }}>{currentData.bank_tujuan}</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
-                                                <CellContent isEditing={isEditing} value={currentData.no_rek} onChange={(v: string) => handleTempChange('no_rek', v)} monospaced />
-                                            </td>
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
-                                                <CellContent isEditing={isEditing} value={currentData.prefix_penerima} onChange={(v: string) => handleTempChange('prefix_penerima', v)} blue />
-                                            </td>
-
-                                            {/* Data Transaksi */}
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13, borderLeft: "1px solid #e2e8f0" }}>
-                                                <CellContent isEditing={isEditing} value={currentData.kode_produk} onChange={(v: string) => handleTempChange('kode_produk', v)} align={isEditing ? "left" : "right"} />
-                                            </td>
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a" }}>
-                                                <CellContent isEditing={isEditing} value={currentData.volume} onChange={(v: string) => handleTempChange('volume', parseInt(v) || 0)} align={isEditing ? "left" : "right"} bold isNumber={true} />
-                                            </td>
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 15 }}>
-                                                <CellContent isEditing={isEditing} value={currentData.jumlah} onChange={(v: string) => handleTempChange('jumlah', v)} align={isEditing ? "left" : "right"} bold green monospaced />
-                                            </td>
-
-                                            {/* Action */}
-                                            <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", borderLeft: "1px solid #e2e8f0", textAlign: "center", minWidth: 120 }}>
-                                                {isEditing ? (
-                                                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                                                        <button
-                                                            onClick={handleSaveEdit}
-                                                            style={{
-                                                                background: "#10b981", color: "#0f172a", border: "none", borderRadius: 6,
-                                                                padding: "6px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                                                                display: "flex", alignItems: "center", gap: 4
-                                                            }}>
-                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                                            Simpan
-                                                        </button>
-                                                        <button
-                                                            onClick={handleCancelEdit}
-                                                            style={{
-                                                                background: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: 6,
-                                                                padding: "6px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                                                                display: "flex", alignItems: "center", gap: 4
-                                                            }}>
-                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleEditClick(d)}
-                                                        style={{
-                                                            background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", borderRadius: 6,
-                                                            padding: "6px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                                                            transition: "all 0.2s ease"
-                                                        }}>
-                                                        Edit
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    )
-                                })
+                                        {/* Data Transaksi */}
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 13, borderLeft: "1px solid #e2e8f0" }}>
+                                            <CellContent value={d.kode_produk} align="right" />
+                                        </td>
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 14, color: "#0f172a" }}>
+                                            <CellContent value={d.volume} align="right" bold />
+                                        </td>
+                                        <td style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", fontSize: 15 }}>
+                                            <CellContent value={d.jumlah} align="right" bold green monospaced />
+                                        </td>
+                                    </tr>
+                                ))
                             ) : (
                                 <tr>
                                     <td colSpan={11} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
