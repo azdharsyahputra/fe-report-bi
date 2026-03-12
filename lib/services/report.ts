@@ -52,7 +52,7 @@ export const reportService = {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `paybank_${params.start_date}_${params.end_date}.xlsx`;
+        a.download = `paybank_${params.start_date}_${params.end_date}.xlsm`;
         document.body.appendChild(a);
         a.click();
         a.remove();
