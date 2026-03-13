@@ -21,8 +21,8 @@ export default function ImportBranchPage() {
         if (!selectedFile) return;
 
         // Check if it's an excel file
-        if (!selectedFile.name.match(/\.(xlsx|xls)$/)) {
-            setError("Harap pilih file Excel (.xlsx atau .xls)");
+        if (!selectedFile.name.match(/\.(xlsx|xls|xlsm)$/)) {
+            setError("Harap pilih file Excel (.xlsx, .xls, atau .xlsm)");
             return;
         }
 
@@ -106,13 +106,13 @@ export default function ImportBranchPage() {
                             {isLoading ? "Sedang Mengimpor..." : "Pilih File Excel"}
                         </h3>
                         <p style={{ color: "#64748b", fontSize: 14, maxWidth: 400, margin: "0 auto" }}>
-                            Klik atau seret file `.xlsx` atau `.xls` di sini untuk mulai mengimpor data branch bank.
+                            Klik atau seret file `.xlsx`, `.xls`, atau `.xlsm` di sini untuk mulai mengimpor data branch bank.
                         </p>
                         <input
                             type="file"
                             ref={fileInputRef}
                             style={{ display: "none" }}
-                            accept=".xlsx, .xls"
+                            accept=".xlsx, .xls, .xlsm"
                             onChange={handleFileChange}
                             disabled={isLoading}
                         />
