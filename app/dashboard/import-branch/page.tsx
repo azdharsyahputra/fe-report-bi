@@ -14,12 +14,10 @@ export default function ImportBranchPage() {
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const [importSummary, setImportSummary] = useState<any>(null);
     const [importErrors, setImportErrors] = useState<any[]>([]);
+    const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0];
-        if (!selectedFile) return;
-
+    const processFile = async (selectedFile: File) => {
         // Check if it's an excel file
         if (!selectedFile.name.match(/\.(xlsx|xls|xlsm)$/)) {
             setError("Harap pilih file Excel (.xlsx, .xls, atau .xlsm)");
@@ -51,6 +49,30 @@ export default function ImportBranchPage() {
         }
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) processFile(file);
+    };
+
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setIsDragging(true);
+        } else if (e.type === "dragleave") {
+            setIsDragging(false);
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        const file = e.dataTransfer.files?.[0];
+        if (file) processFile(file);
+    };
+
     return (
         <>
             <Header
@@ -74,15 +96,23 @@ export default function ImportBranchPage() {
                     <div
                         style={{
                             cursor: "pointer",
-                            border: "2px dashed rgba(37, 99, 235, 0.3)",
+                            border: isDragging ? "2px dashed #2563eb" : "2px dashed rgba(37, 99, 235, 0.3)",
                             borderRadius: 12,
                             padding: "48px 20px",
                             transition: "all 0.2s ease",
-                            background: "#f8fafc",
+                            background: isDragging ? "rgba(37, 99, 235, 0.05)" : "#f8fafc",
                         }}
                         onClick={() => fileInputRef.current?.click()}
-                        onMouseOver={(e) => (e.currentTarget.style.borderColor = "rgba(37, 99, 235, 0.6)")}
-                        onMouseOut={(e) => (e.currentTarget.style.borderColor = "rgba(37, 99, 235, 0.3)")}
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDragOver={handleDrag}
+                        onDrop={handleDrop}
+                        onMouseOver={(e) => {
+                            if (!isDragging) e.currentTarget.style.borderColor = "rgba(37, 99, 235, 0.6)";
+                        }}
+                        onMouseOut={(e) => {
+                            if (!isDragging) e.currentTarget.style.borderColor = "rgba(37, 99, 235, 0.3)";
+                        }}
                     >
                         <div style={{ marginBottom: 16 }}>
                             <div style={{
