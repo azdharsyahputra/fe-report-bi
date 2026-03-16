@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { kycService, KycItem } from "@/lib/services/kyc";
 import { authService } from "@/lib/services/auth";
-import Image from "next/image";
 import { BASE_URL } from "@/lib/api-client";
 import Header from "@/components/header";
 import { useDashboard } from "@/lib/context/dashboard-context";
@@ -21,7 +20,7 @@ export default function KYCPage() {
     const [totalData, setTotalData] = useState(0);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-
+    
     // Date Helpers
     const getFormattedDate = (date: Date) => {
         const y = date.getFullYear();
@@ -101,8 +100,8 @@ export default function KYCPage() {
         <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
             {Array.from({ length: 9 }).map((_, i) => (
                 <td key={i} style={{ padding: "16px 16px" }}>
-                    <div className="skeleton-box" style={{
-                        height: i === 2 ? "16px" : "12px",
+                    <div className="skeleton-box" style={{ 
+                        height: i === 2 ? "16px" : "12px", 
                         width: i === 2 ? "90%" : i === 3 ? "70%" : "60%",
                         borderRadius: "4px"
                     }} />
@@ -123,8 +122,8 @@ export default function KYCPage() {
     return (
         <>
             <Header
-                title="Verifikasi KYC Pengguna"
-                subtitle="Data verifikasi identitas pengguna"
+                title="Verifikasi KYC Nasabah"
+                subtitle="Data verifikasi identitas nasabah"
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
             />
@@ -238,7 +237,7 @@ export default function KYCPage() {
                                 kycData.map((d: KycItem, idx: number) => {
                                     const kycFiles = d.kyc_files ? d.kyc_files.split(',') : [];
                                     const isApproved = d.is_kyc_approved === "1";
-
+                                    
                                     return (
                                         <tr key={d.user_name + '-' + idx} style={{ transition: "background 0.2s" }} className="hover:bg-slate-50">
                                             <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#64748b", fontFamily: "var(--font-geist-mono)" }}>{(page - 1) * limit + idx + 1}</td>
@@ -279,21 +278,7 @@ export default function KYCPage() {
                                                             style={{ position: "relative", width: 42, height: 42, overflow: "hidden", borderRadius: 8, border: "1px solid #e2e8f0", background: "#f1f5f9", cursor: "pointer", transition: "transform 0.2s" }}
                                                             onClick={() => handleImageClick(getImageUrl(url))}
                                                         >
-                                                            <Image
-                                                                src={getImageUrl(url)}
-                                                                alt={`KYC-${i}`}
-                                                                width={42}
-                                                                height={42}
-                                                                loading="lazy"
-                                                                className="hover:scale-110 image-fade-in"
-                                                                style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.2s" }}
-                                                                onError={(e) => {
-                                                                    // Fallback if image fails to load
-                                                                    const target = e.target as HTMLImageElement;
-                                                                    target.src = "https://ui-avatars.com/api/?name=KYC&background=f1f5f9&color=cbd5e1";
-                                                                }}
-                                                            />
-                                                            <div className="absolute inset-0 bg-slate-200/50 animate-pulse -z-10" />
+                                                            <img src={getImageUrl(url)} alt={`KYC-${i}`} className="hover:scale-110" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.2s" }} />
                                                         </div>
                                                     )) : (
                                                         <span style={{ color: "#94a3b8", fontSize: 12 }}>-</span>
@@ -380,40 +365,16 @@ export default function KYCPage() {
                         display: "flex", alignItems: "center", justifyContent: "center",
                         animation: "zoomIn 0.2s ease-out"
                     }} onClick={(e) => e.stopPropagation()}>
-                        <Image
+                        <img
                             src={selectedImage}
                             alt="Enlarged KYC Document"
-                            width={1200}
-                            height={1200}
-                            priority
-                            className="image-fade-in"
                             style={{
                                 maxWidth: "100%", maxHeight: "85vh",
-                                width: "auto", height: "auto",
                                 objectFit: "contain", borderRadius: 12,
                                 boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
                                 border: "1px solid rgba(255,255,255,0.1)"
                             }}
                         />
-                        {/* Download Button */}
-                        <a
-                            href={selectedImage}
-                            download
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                position: "absolute", bottom: -50,
-                                background: "#2563eb", color: "#ffffff",
-                                padding: "10px 20px", borderRadius: 8,
-                                textDecoration: "none", fontSize: 13, fontWeight: 600,
-                                display: "flex", alignItems: "center", gap: 8,
-                                boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.3)"
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                            Download Foto KYC
-                        </a>
                     </div>
                 </div>
             )}
@@ -443,20 +404,6 @@ export default function KYCPage() {
                 @keyframes zoomIn {
                     from { opacity: 0; transform: scale(0.95); }
                     to { opacity: 1; transform: scale(1); }
-                }
-                .image-fade-in {
-                    animation: fadeIn 0.3s ease-in-out;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                .animate-pulse {
-                    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-                }
-                @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: .5; }
                 }
             `}</style>
         </>
