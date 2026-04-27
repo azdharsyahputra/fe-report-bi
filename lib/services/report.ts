@@ -69,4 +69,27 @@ export const reportService = {
 
         return apiClient.get(`/reports/missing-branch?${query.toString()}`);
     },
+
+    exportMissingBranchExcel: async (params: { start_date: string; end_date: string; bank_tujuan?: string }) => {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const bankQuery = params.bank_tujuan ? `&bank_tujuan=${params.bank_tujuan}` : "";
+        const res = await fetch(
+            `${BASE_URL}/reports/missing-branch/export-excel?start_date=${params.start_date}&end_date=${params.end_date}${bankQuery}`,
+            {
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+            }
+        );
+        if (!res.ok) throw new Error("Gagal mengunduh Excel.");
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `missing_branch_${params.start_date}_${params.end_date}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    },
 };

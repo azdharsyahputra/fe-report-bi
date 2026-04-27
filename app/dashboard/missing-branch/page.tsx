@@ -118,6 +118,18 @@ export default function MissingBranchPage() {
         }
     };
 
+    const handleExportExcel = async () => {
+        try {
+            await reportService.exportMissingBranchExcel({
+                start_date: startDate,
+                end_date: endDate,
+                bank_tujuan: filterBankTujuan,
+            });
+        } catch (err: any) {
+            alert(err.message || "Gagal mengunduh Excel");
+        }
+    };
+
     const fetchMissingBranch = async (pageNum = 1, limitNum = 20, start = startDate, end = endDate, bankTujuan = filterBankTujuan) => {
         setIsLoading(true);
         setError(null);
@@ -205,6 +217,24 @@ export default function MissingBranchPage() {
                             <option value={50}>50 Baris</option>
                             <option value={100}>100 Baris</option>
                         </select>
+
+                        <button
+                            onClick={handleExportExcel}
+                            style={{
+                                display: "flex", alignItems: "center", gap: 8,
+                                background: "#10b981", color: "#ffffff", padding: "10px 16px",
+                                borderRadius: 10, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer",
+                                transition: "all 0.2s"
+                            }}
+                            className="hover:bg-emerald-600"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Export Excel
+                        </button>
                     </div>
                 </div>
 
