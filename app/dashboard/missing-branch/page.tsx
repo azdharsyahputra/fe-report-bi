@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { reportService } from "@/lib/services/report";
+import { branchService } from "@/lib/services/branch";
 import Header from "@/components/header";
 import { useDashboard } from "@/lib/context/dashboard-context";
 
@@ -16,6 +17,15 @@ export default function MissingBranchPage() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(20);
     const [total, setTotal] = useState(0);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<any | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({
+        regencies_code: "",
+        regencies: "",
+        office_type: ""
+    });
 
     const SkeletonRow = () => (
         <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
@@ -68,6 +78,44 @@ export default function MissingBranchPage() {
         setInputEndDate(val);
         setEndDate(val.replace(/-/g, ""));
         setPage(1);
+    };
+
+    const handleOpenModal = (item: any) => {
+        setSelectedItem(item);
+        setFormData({
+            regencies_code: item.regencies_code || "",
+            regencies: item.regencies || "",
+            office_type: item.office_type || ""
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedItem(null);
+        setFormData({ regencies_code: "", regencies: "", office_type: "" });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedItem) return;
+
+        setIsSubmitting(true);
+        try {
+            await branchService.createBranchBank({
+                name: selectedItem.name,
+                branch_code: selectedItem.branch_code,
+                regencies_code: formData.regencies_code,
+                regencies: formData.regencies,
+                office_type: formData.office_type
+            });
+            handleCloseModal();
+            fetchMissingBranch(page, limit, startDate, endDate, filterBankTujuan);
+        } catch (err: any) {
+            alert(err.message || "Gagal melakukan update missing branch");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const fetchMissingBranch = async (pageNum = 1, limitNum = 20, start = startDate, end = endDate, bankTujuan = filterBankTujuan) => {
@@ -181,7 +229,7 @@ export default function MissingBranchPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
                             <tr>
-                                {["No", "Bank Tujuan", "Prefix Penerima"].map((h) => (
+                                {["No", "Bank Tujuan", "Prefix Penerima", "Aksi"].map((h) => (
                                     <th key={h} style={{
                                         padding: "14px 16px", fontSize: 12, fontWeight: 700,
                                         color: "#64748b", borderBottom: "1px solid #e2e8f0",
@@ -205,11 +253,23 @@ export default function MissingBranchPage() {
                                                 {item.prefix_penerima}
                                             </span>
                                         </td>
+                                        <td style={{ padding: "14px 16px", borderBottom: "1px solid #f1f5f9", fontSize: 14 }}>
+                                            <button
+                                                onClick={() => handleOpenModal(item)}
+                                                style={{
+                                                    background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe",
+                                                    padding: "6px 12px", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "0.2s"
+                                                }}
+                                                className="hover:bg-blue-100"
+                                            >
+                                                Update
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={3} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
+                                    <td colSpan={4} style={{ padding: "40px", textAlign: "center", color: "#64748b", fontSize: 14 }}>
                                         Tidak ada data missing branch.
                                     </td>
                                 </tr>
@@ -257,6 +317,77 @@ export default function MissingBranchPage() {
                     </div>
                 </div>
             </main>
+
+            {isModalOpen && selectedItem && (
+                <div style={{
+                    position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+                    background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)",
+                    display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 24
+                }}>
+                    <div style={{
+                        background: "#fff", padding: 32, borderRadius: 16, width: "100%", maxWidth: 500,
+                        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                        animation: "fadeIn 0.2s ease"
+                    }}>
+                        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", marginBottom: 8, marginTop: 0 }}>Update Missing Branch</h2>
+                        <p style={{ fontSize: 14, color: "#64748b", marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid #e2e8f0" }}>
+                            Lengkapi data Mapping cabang bank berikut ini
+                        </p>
+                        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                            <div style={{ display: "flex", gap: 12 }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>Bank Tujuan / Name</label>
+                                    <input type="text" value={selectedItem.name} disabled style={{
+                                        width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#f8fafc", color: "#64748b", fontSize: 14, outline: "none"
+                                    }} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>Branch Code</label>
+                                    <input type="text" value={selectedItem.branch_code} disabled style={{
+                                        width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#f8fafc", color: "#64748b", fontSize: 14, outline: "none"
+                                    }} />
+                                </div>
+                            </div>
+                            <div>
+                                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>Regencies Code</label>
+                                <input type="text" value={formData.regencies_code} onChange={e => setFormData({ ...formData, regencies_code: e.target.value })} required style={{
+                                    width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #bfdbfe", background: "#ffffff", color: "#0f172a", fontSize: 14, outline: "none", transition: "0.2s"
+                                }} className="focus:ring-2 focus:ring-blue-500" placeholder="Kode wilayah (e.g. 0100)" />
+                            </div>
+                            <div>
+                                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>Regencies</label>
+                                <input type="text" value={formData.regencies} onChange={e => setFormData({ ...formData, regencies: e.target.value })} required style={{
+                                    width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #bfdbfe", background: "#ffffff", color: "#0f172a", fontSize: 14, outline: "none", transition: "0.2s"
+                                }} className="focus:ring-2 focus:ring-blue-500" placeholder="Nama wilayah (e.g. KOTA JAKARTA)" />
+                            </div>
+                            <div>
+                                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 6 }}>Office Type</label>
+                                <select value={formData.office_type} onChange={e => setFormData({ ...formData, office_type: e.target.value })} required style={{
+                                    width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #bfdbfe", background: "#ffffff", color: "#0f172a", fontSize: 14, outline: "none", cursor: "pointer", transition: "0.2s"
+                                }} className="focus:ring-2 focus:ring-blue-500">
+                                    <option value="" disabled>Pilih tipe kantor</option>
+                                    <option value="KCU">KCU</option>
+                                    <option value="KCP">KCP</option>
+                                    <option value="KC">KC</option>
+                                    <option value="KAS">KAS</option>
+                                </select>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 16 }}>
+                                <button type="button" onClick={handleCloseModal} style={{
+                                    padding: "10px 20px", borderRadius: 10, background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", fontSize: 14, fontWeight: 600, cursor: "pointer"
+                                }}>
+                                    Batal
+                                </button>
+                                <button type="submit" disabled={isSubmitting} style={{
+                                    padding: "10px 20px", borderRadius: 10, background: isSubmitting ? "#93c5fd" : "#2563eb", color: "#fff", border: "none", fontSize: 14, fontWeight: 600, cursor: isSubmitting ? "not-allowed" : "pointer"
+                                }}>
+                                    {isSubmitting ? "Menyimpan..." : "Simpan"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <style jsx>{`
                 .spinner {

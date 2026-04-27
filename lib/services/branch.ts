@@ -10,6 +10,7 @@ export const branchService = {
 
         return apiClient.get(`/branch-bank?${query.toString()}`);
     },
+    createBranchBank: (data: any) => apiClient.post("/branch-bank", data),
     updateBranch: (id: number, data: any) => apiClient.put(`/branch-bank/${id}`, data),
     importExcel: (file: File) => {
         const formData = new FormData();
